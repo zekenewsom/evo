@@ -19,7 +19,7 @@ export default function HomePage() {
       </div>
 
       <div className="mt-16 w-full p-8 bg-slate-700/50 rounded-lg border border-slate-600">
-          <h2 className="text-2xl font-bold mb-4">Your Founder's Operating System</h2>
+          <h2 className="text-2xl font-bold mb-4">Your Founder&apos;s Operating System</h2>
           <p className="text-slate-400">
             Stop guessing, start building. We provide the structured path so you can focus on what matters most.
           </p>
