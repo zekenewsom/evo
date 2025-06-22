@@ -15,7 +15,7 @@ type JourneyPageProps = {
 };
 
 export default async function UserJourneyPage({ params }: JourneyPageProps) {
-  const { journeyId } = params;
+  const { journeyId } = await params;
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
