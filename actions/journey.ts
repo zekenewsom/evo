@@ -46,36 +46,6 @@ export async function startSaaSJourney() {
   redirect(`/journey/${userJourney.id}`);
 }
 
-export async function toggleTaskStatus(
-  userJourneyId: string,
-  stepId: string,
-  taskId: string,
-  currentStatus: string
-) {
-  const supabase = await createSupabaseServerClient();
-  const newStatus = currentStatus === 'completed' ? 'not_started' : 'completed';
-
-  const { error } = await supabase
-    .from('user_progress')
-    .update({ 
-      status: newStatus, 
-      completed_at: newStatus === 'completed' ? new Date().toISOString() : null 
-    })
-    .eq('user_journey_id', userJourneyId)
-    .eq('item_id', taskId)
-    .eq('item_type', 'task');
-
-  if (error) {
-    console.error('Error toggling task status:', error);
-    return { error: 'Could not update the task status.' };
-  }
-
-  // Revalidate both the overview and the specific step page
-  revalidatePath(`/journey/${userJourneyId}`);
-  revalidatePath(`/journey/${userJourneyId}/${stepId}`);
-
-  return { success: true };
-}
 
 export async function saveUserInput(formData: FormData) {
   const supabase = await createSupabaseServerClient();
@@ -97,4 +67,75 @@ export async function saveUserInput(formData: FormData) {
   
   revalidatePath(`/journey/${journeyId}/${stepId}`);
   return { success: true, message: 'Saved!' };
+}
+
+// New helper function to check and update parent statuses
+async function updateParentStatuses(supabase: any, userJourneyId: string, stepId: string) {
+  // Check if all tasks for the step are completed
+  const { data: tasks, error: tasksError } = await supabase
+    .from('steps')
+    .select(`*, tasks!inner(user_progress!inner(status))`)
+    .eq('id', stepId)
+    .eq('tasks.user_progress.user_journey_id', userJourneyId)
+    .single();
+
+  if (tasksError) return;
+
+  const allTasksCompleted = tasks.tasks.every((t: any) => t.user_progress[0].status === 'completed');
+
+  if (allTasksCompleted) {
+    // If all tasks are complete, mark the step as complete
+    await supabase
+      .from('user_progress')
+      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .eq('user_journey_id', userJourneyId)
+      .eq('item_id', stepId);
+
+    // Now, check if all steps for the parent stage are completed
+    const stageId = tasks.stage_id;
+    const { data: steps, error: stepsError } = await supabase
+      .from('stages')
+      .select(`*, steps!inner(user_progress!inner(status))`)
+      .eq('id', stageId)
+      .eq('steps.user_progress.user_journey_id', userJourneyId)
+      .single();
+
+    if (stepsError) return;
+
+    const allStepsCompleted = steps.steps.every((s: any) => s.user_progress[0].status === 'completed');
+
+    if (allStepsCompleted) {
+      // If all steps are complete, mark the stage as complete
+      await supabase
+        .from('user_progress')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('user_journey_id', userJourneyId)
+        .eq('item_id', stageId);
+    }
+  }
+}
+
+// Updated toggleTaskStatus function
+export async function toggleTaskStatus(userJourneyId: string, stepId: string, taskId: string, currentStatus: string) {
+  const supabase = await createSupabaseServerClient();
+  const newStatus = currentStatus === 'completed' ? 'not_started' : 'completed';
+
+  const { error } = await supabase
+    .from('user_progress')
+    .update({ status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null })
+    .eq('user_journey_id', userJourneyId)
+    .eq('item_id', taskId)
+    .eq('item_type', 'task');
+
+  if (error) {
+    return { error: 'Could not update the task status.' };
+  }
+
+  // After toggling a task, check if its parents should be updated
+  await updateParentStatuses(supabase, userJourneyId, stepId);
+
+  revalidatePath(`/journey/${userJourneyId}`);
+  revalidatePath(`/journey/${userJourneyId}/${stepId}`);
+  
+  return { success: true };
 }

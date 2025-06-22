@@ -19,7 +19,7 @@ export default function JourneyNavigator({ journeyData, userJourneyId }: Journey
         <div key={stage.id} className="flex items-center">
           {/* Render the Stage Node */}
           <StageCard
-            stage={stage}
+            stage={stage as any}
             userJourneyId={userJourneyId}
           />
           {/* Render a connector line, but not after the last stage */}

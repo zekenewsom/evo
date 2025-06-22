@@ -9,12 +9,12 @@ type StepPageProps = {
   };
 };
 
-export default function StepPage({ params }: StepPageProps) {
-  // We pass the Server Action down as a prop to the Client Component
+export default async function StepPage({ params }: StepPageProps) {
+  const { journeyId, stepId } = await params;
   return (
     <StepWorkspace 
-      journeyId={params.journeyId} 
-      stepId={params.stepId} 
+      journeyId={journeyId} 
+      stepId={stepId} 
       saveAction={saveUserInput} 
     />
   );

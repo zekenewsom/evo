@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { getStepDetailsForUser } from '@/lib/data';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { StepWithDetails } from '@/lib/types';
+import type { StepDetailsForWorkspace } from '@/lib/data';
 import TaskItem from './TaskItem';
 import GuidancePanel from './GuidancePanel'; // We will use the slide-out panel
 import { ArrowLeftIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
@@ -14,8 +15,19 @@ type StepWorkspaceProps = {
   saveAction: (formData: FormData) => Promise<{ success?: boolean; error?: string; message?: string; }>;
 };
 
+// Breadcrumbs Component
+const Breadcrumbs = ({ journeyId, stageTitle, stepTitle }: { journeyId: string; stageTitle: string; stepTitle: string; }) => (
+  <div className="text-sm breadcrumbs text-slate-400 mb-4">
+    <ul>
+      <li><Link href={`/journey/${journeyId}`} className="hover:text-primary">Journey</Link></li>
+      <li>{stageTitle}</li>
+      <li>{stepTitle}</li>
+    </ul>
+  </div>
+);
+
 export default function StepWorkspace({ journeyId, stepId, saveAction }: StepWorkspaceProps) {
-  const [stepData, setStepData] = useState<(StepWithDetails & { userInput: string | null; }) | null>(null);
+  const [stepData, setStepData] = useState<StepDetailsForWorkspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false); // State for the panel
   const supabase = createSupabaseBrowserClient();
@@ -37,6 +49,14 @@ export default function StepWorkspace({ journeyId, stepId, saveAction }: StepWor
 
   return (
     <div>
+      {/* Breadcrumbs at the top */}
+      {stepData && (
+        <Breadcrumbs 
+          journeyId={journeyId} 
+          stageTitle={stepData.stageTitle} 
+          stepTitle={stepData.title}
+        />
+      )}
       <Link href={`/journey/${journeyId}`} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-primary mb-4">
         <ArrowLeftIcon className="w-4 h-4" />
         Back to Journey Overview

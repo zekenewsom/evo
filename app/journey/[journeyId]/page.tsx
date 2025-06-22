@@ -7,6 +7,7 @@ type JourneyPageProps = {
   };
 };
 
-export default function UserJourneyPage({ params }: JourneyPageProps) {
-  return <UserJourney journeyId={params.journeyId} />;
+export default async function UserJourneyPage({ params }: JourneyPageProps) {
+  const { journeyId } = await params;
+  return <UserJourney journeyId={journeyId} />;
 }
