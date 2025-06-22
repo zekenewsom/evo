@@ -1,16 +1,51 @@
+// components/journey/TaskItem.tsx
+'use client';
 import type { Tables } from '@/lib/database.types';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { useTransition } from 'react';
+import { toggleTaskStatus } from '@/actions/journey';
 
-type TaskItemProps = {
-  task: Tables<'tasks'>;
+const CircleIcon = (props: React.ComponentProps<'svg'>) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+type TaskWithStatus = Tables<'tasks'> & {
+  status: string;
 };
 
-export default function TaskItem({ task }: TaskItemProps) {
+type TaskItemProps = {
+  task: TaskWithStatus;
+  userJourneyId: string;
+};
+
+export default function TaskItem({ task, userJourneyId }: TaskItemProps) {
+  const [isPending, startTransition] = useTransition();
+  const isCompleted = task.status === 'completed';
+
+  const handleToggle = () => {
+    startTransition(() => {
+      toggleTaskStatus(userJourneyId, task.id, task.status);
+    });
+  };
+
   return (
-    <div className="flex items-center gap-3 py-2">
-      {/* FIX: Using inline style for guaranteed sizing */}
-      <CheckCircleIcon className="text-slate-500" style={{ width: '1.25rem', height: '1.25rem' }} />
-      <p className="text-slate-300">{task.title}</p>
+    <div 
+      onClick={handleToggle}
+      className="flex items-center gap-3 py-2 cursor-pointer group"
+    >
+      {isCompleted ? (
+        // FIX IS HERE
+        <CheckCircleIcon className="w-6 h-6 text-green-500" style={{ width: '1.25rem', height: '1.25rem' }} />
+      ) : (
+        // FIX IS HERE
+        <CircleIcon className="w-6 h-6 text-slate-500 group-hover:text-slate-300 transition-colors" style={{ width: '1.25rem', height: '1.25rem' }} />
+      )}
+      <p className={`transition-colors ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-300 group-hover:text-slate-100'}`}>
+        {task.title}
+      </p>
+      {isPending && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400 ml-auto"></div>}
     </div>
   );
 }

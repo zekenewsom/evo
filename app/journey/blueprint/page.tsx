@@ -58,7 +58,7 @@ export default async function JourneyBlueprintPage() {
         <p className="text-lg text-slate-400">{blueprint.description}</p>
       </div>
       {/* Render the new component instead of the raw JSON */}
-      <JourneyNavigator blueprint={blueprint} />
+      <JourneyNavigator journeyData={blueprint} />
     </div>
   );
 }

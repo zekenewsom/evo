@@ -1,25 +1,22 @@
 // components/journey/StepItem.tsx (Corrected)
+'use client'; // This was missing before, it's a client component because it has onClick handlers
 import type { Tables } from '@/lib/database.types';
 import TaskItem from './TaskItem';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
-
-// This is now the definitive type for a step with all its details
-export type StepWithDetails = Tables<'steps'> & {
-  tasks: Tables<'tasks'>[];
-  guidance_content: Tables<'guidance_content'> | null;
-};
+import type { StepWithDetails } from '@/lib/types'; // Import from our new types file
 
 type StepItemProps = {
   step: StepWithDetails;
   onSelect: (step: StepWithDetails) => void;
+  userJourneyId: string;
 };
 
-export default function StepItem({ step, onSelect }: StepItemProps) {
+export default function StepItem({ step, onSelect, userJourneyId }: StepItemProps) {
   const hasGuidance = !!step.guidance_content;
 
   return (
     <div
-      className={`pl-6 py-4 border-l ml-6 ${hasGuidance ? 'border-primary cursor-pointer hover:bg-slate-700/50 rounded-r-lg' : 'border-slate-700'}`}
+      className={`pl-6 py-4 border-l ml-6 transition-colors ${hasGuidance ? 'border-primary cursor-pointer hover:bg-slate-700/50 rounded-r-lg' : 'border-slate-700'}`}
       onClick={() => hasGuidance && onSelect(step)}
     >
       <div className="flex items-center gap-3 mb-2">
@@ -30,7 +27,7 @@ export default function StepItem({ step, onSelect }: StepItemProps) {
       </div>
       <div className="flex flex-col">
         {step.tasks.map((task) => (
-          <TaskItem key={task.id} task={task} />
+          <TaskItem key={task.id} task={task} userJourneyId={userJourneyId} />
         ))}
       </div>
     </div>
