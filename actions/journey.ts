@@ -46,20 +46,34 @@ export async function startSaaSJourney() {
   redirect(`/journey/${userJourney.id}`);
 }
 
-export async function toggleTaskStatus(userJourneyId: string, taskId: string, currentStatus: string) {
+export async function toggleTaskStatus(
+  userJourneyId: string,
+  stepId: string,
+  taskId: string,
+  currentStatus: string
+) {
   const supabase = await createSupabaseServerClient();
   const newStatus = currentStatus === 'completed' ? 'not_started' : 'completed';
 
   const { error } = await supabase
     .from('user_progress')
-    .update({ status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null })
+    .update({ 
+      status: newStatus, 
+      completed_at: newStatus === 'completed' ? new Date().toISOString() : null 
+    })
     .eq('user_journey_id', userJourneyId)
     .eq('item_id', taskId)
     .eq('item_type', 'task');
 
-  if (error) { return { error: 'Could not update task status.' }; }
+  if (error) {
+    console.error('Error toggling task status:', error);
+    return { error: 'Could not update the task status.' };
+  }
 
+  // Revalidate both the overview and the specific step page
   revalidatePath(`/journey/${userJourneyId}`);
+  revalidatePath(`/journey/${userJourneyId}/${stepId}`);
+
   return { success: true };
 }
 

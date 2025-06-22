@@ -1,9 +1,7 @@
-// components/journey/JourneyNavigator.tsx (Corrected)
+// components/journey/JourneyNavigator.tsx (Refactored for Roadmap View)
 'use client';
-import { useState } from 'react';
 import StageCard from './StageCard';
-import GuidancePanel from './GuidancePanel';
-import type { JourneyData, StepWithDetails } from '@/lib/types'; // Import from our new types file
+import type { JourneyData } from '@/lib/types';
 
 type JourneyNavigatorProps = {
   journeyData: JourneyData;
@@ -11,36 +9,25 @@ type JourneyNavigatorProps = {
 };
 
 export default function JourneyNavigator({ journeyData, userJourneyId }: JourneyNavigatorProps) {
-  const [selectedStep, setSelectedStep] = useState<StepWithDetails | null>(null);
-
   if (!journeyData || !journeyData.stages) {
     return <p>No journey data available.</p>;
   }
 
-  const handleStepSelect = (step: StepWithDetails) => {
-    setSelectedStep(step);
-  };
-
-  const handleClosePanel = () => {
-    setSelectedStep(null);
-  };
-
   return (
-    <div className="w-full relative">
-      {journeyData.stages.map((stage) => (
-        <StageCard
-          key={stage.id}
-          stage={stage}
-          onStepSelect={handleStepSelect}
-          userJourneyId={userJourneyId}
-        />
+    <div className="flex items-start p-4 space-x-8 overflow-x-auto">
+      {journeyData.stages.map((stage, index) => (
+        <div key={stage.id} className="flex items-center">
+          {/* Render the Stage Node */}
+          <StageCard
+            stage={stage}
+            userJourneyId={userJourneyId}
+          />
+          {/* Render a connector line, but not after the last stage */}
+          {index < journeyData.stages.length - 1 && (
+            <div className="w-16 h-1 bg-slate-700 mx-4"></div>
+          )}
+        </div>
       ))}
-      {selectedStep && selectedStep.guidance_content && (
-        <GuidancePanel
-          guidance={selectedStep.guidance_content}
-          onClose={handleClosePanel}
-        />
-      )}
     </div>
   );
 }

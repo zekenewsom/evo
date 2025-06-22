@@ -18,15 +18,17 @@ type TaskWithStatus = Tables<'tasks'> & {
 type TaskItemProps = {
   task: TaskWithStatus;
   userJourneyId: string;
+  stepId: string; // Add stepId as a required prop
 };
 
-export default function TaskItem({ task, userJourneyId }: TaskItemProps) {
+export default function TaskItem({ task, userJourneyId, stepId }: TaskItemProps) {
   const [isPending, startTransition] = useTransition();
   const isCompleted = task.status === 'completed';
 
   const handleToggle = () => {
     startTransition(() => {
-      toggleTaskStatus(userJourneyId, task.id, task.status);
+      // Pass all required IDs to the action
+      toggleTaskStatus(userJourneyId, stepId, task.id, task.status);
     });
   };
 
@@ -36,11 +38,9 @@ export default function TaskItem({ task, userJourneyId }: TaskItemProps) {
       className="flex items-center gap-3 py-2 cursor-pointer group"
     >
       {isCompleted ? (
-        // FIX IS HERE
-        <CheckCircleIcon className="w-6 h-6 text-green-500" style={{ width: '1.25rem', height: '1.25rem' }} />
+        <CheckCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} className="w-6 h-6 text-green-500" />
       ) : (
-        // FIX IS HERE
-        <CircleIcon className="w-6 h-6 text-slate-500 group-hover:text-slate-300 transition-colors" style={{ width: '1.25rem', height: '1.25rem' }} />
+        <CircleIcon style={{ width: '1.25rem', height: '1.25rem' }} className="w-6 h-6 text-slate-500 group-hover:text-slate-300 transition-colors" />
       )}
       <p className={`transition-colors ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-300 group-hover:text-slate-100'}`}>
         {task.title}
