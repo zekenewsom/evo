@@ -2,8 +2,7 @@
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getSaaSBlueprint } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { unstable_cache as cache, revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function startSaaSJourney() {
@@ -11,13 +10,19 @@ export async function startSaaSJourney() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login?error=not_logged_in');
+    return { error: 'You must be logged in to start a journey.' };
   }
 
-  // Fetch the SaaS blueprint template
-  const blueprint = await getSaaSBlueprint(supabase);
-  if (!blueprint) {
-    redirect('/dashboard?error=blueprint_not_found');
+  // Directly query for the template here, as getJourneyForUser is for existing user journeys.
+  const { data: blueprint, error: blueprintError } = await supabase
+    .from('journey_templates')
+    .select(`*, stages(*, steps(*, tasks(*)))`)
+    .eq('title', 'SaaS Founder Blueprint')
+    .single();
+
+  if (blueprintError || !blueprint) {
+    console.error('Blueprint Fetch Error:', blueprintError);
+    return { error: 'Could not find the SaaS Founder Blueprint template.' };
   }
 
   // --- Create the user's personal journey instance ---
@@ -33,11 +38,11 @@ export async function startSaaSJourney() {
 
   if (journeyError) {
     console.error('Error creating user journey:', journeyError);
-    redirect('/dashboard?error=journey_create_failed');
+    return { error: 'Failed to start your journey. Please try again.' };
   }
 
   // --- Initialize progress for every item in the blueprint ---
-  const progressItems = [];
+  const progressItems: any[] = [];
   for (const stage of blueprint.stages) {
     progressItems.push({ user_journey_id: userJourney.id, item_id: stage.id, item_type: 'stage' });
     for (const step of stage.steps) {
@@ -52,13 +57,10 @@ export async function startSaaSJourney() {
 
   if (progressError) {
     console.error('Error initializing journey progress:', progressError);
-    // Optionally, delete the user_journey that was just created for cleanup
-    redirect('/dashboard?error=progress_init_failed');
+    return { error: 'Failed to initialize your journey progress.' };
   }
 
-  // Revalidate the dashboard path to show the new journey state
   revalidatePath('/dashboard');
-  // Redirect the user to their new journey page
   redirect(`/journey/${userJourney.id}`);
 }
 

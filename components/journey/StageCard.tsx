@@ -4,7 +4,6 @@ import { useState } from 'react';
 import StepItem from './StepItem';
 import type { StepWithDetails, StageWithDetails } from '@/lib/types';
 import { ChevronDownIcon } from '@heroicons/react/24/solid';
-import type { Tables } from '@/lib/database.types';
 
 
 
@@ -38,7 +37,7 @@ export default function StageCard({ stage, onStepSelect, userJourneyId }: StageC
       {isOpen && (
         <div className="p-6 border-t border-slate-700">
           {stage.steps.map((step) => (
-            <StepItem key={step.id} step={step} onSelect={onStepSelect} userJourneyId={userJourneyId} />
+            <StepItem key={step.id} step={step}  userJourneyId={userJourneyId} />
           ))}
         </div>
       )}

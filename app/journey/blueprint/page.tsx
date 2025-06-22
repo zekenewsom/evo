@@ -1,12 +1,10 @@
 // app/journey/blueprint/page.tsx (Corrected)
 // app/journey/blueprint/page.tsx (Corrected)
-import { getSaaSBlueprint } from '@/lib/data';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import JourneyNavigator from '@/components/journey/JourneyNavigator'; // Import the new component
 
 // Fix: Make business_type_tag, created_at, and version optional in JourneyBlueprint type if not always present, or ensure your query always selects them.
-import type { StepWithDetails } from '@/components/journey/StepItem';
 
 interface StageWithDetails {
   id: string;

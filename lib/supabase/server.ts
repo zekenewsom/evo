@@ -15,22 +15,23 @@ export async function createSupabaseServerClient() {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        // These are only needed if you update cookies in server components
         set(name: string, value: string, options) {
-            try {
-              cookieStore.set({ name, value, ...options });
-            } catch (error) {
-              // The `set` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing user sessions.
-            }
+          try {
+            // Use object signature for compatibility
+            cookieStore.set({ name, value, ...options });
+          } catch (_error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
         },
         remove(name: string, options) {
-            try {
-              cookieStore.set({ name, value: '', ...options });
-            } catch (error) {
-              // The `delete` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing user sessions.
-            }
+          try {
+            // Use object signature for compatibility
+            cookieStore.delete({ name, ...options });
+          } catch (_error) {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
         },
       },
     }
@@ -48,8 +49,8 @@ export async function createSupabaseServerActionClient() {
       {
           cookies: {
               get: (name) => cookieStore.get(name)?.value,
-              set: (name, value, options) => cookieStore.set(name, value, options),
-              remove: (name, options) => cookieStore.delete(name, options),
+              set: (name, value, options) => cookieStore.set({ name, value, ...options }),
+              remove: (name, options) => cookieStore.delete({ name, ...options }),
           },
       }
   );

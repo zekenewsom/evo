@@ -22,13 +22,13 @@ export default function GuidancePanel({ guidance, onClose }: GuidancePanelProps)
         <div className="flex-grow p-6 overflow-y-auto">
           {guidance.strategic_rationale && (
             <div className="mb-6">
-              <h3 className="font-semibold text-slate-300 mb-2">Strategic Rationale (The "Why")</h3>
+              <h3 className="font-semibold text-slate-300 mb-2">Strategic Rationale (The &quot;Why&quot;)</h3>
               <p className="text-slate-400">{guidance.strategic_rationale}</p>
             </div>
           )}
           {guidance.actionable_how_to && (
             <div className="mb-6">
-              <h3 className="font-semibold text-slate-300 mb-2">Actionable How-To (The "How")</h3>
+              <h3 className="font-semibold text-slate-300 mb-2">Actionable How-To (The &quot;How&quot;)</h3>
               <p className="text-slate-400 whitespace-pre-line">{guidance.actionable_how_to}</p>
             </div>
           )}
