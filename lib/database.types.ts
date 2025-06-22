@@ -34,6 +34,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      curriculum_modules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          slug: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          slug: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      guidance_content: {
+        Row: {
+          actionable_how_to: string | null
+          created_at: string | null
+          curriculum_module_id: string | null
+          founder_wisdom_pitfalls: string | null
+          id: string
+          key_questions: string[] | null
+          resource_links: Json | null
+          step_id: string
+          strategic_rationale: string | null
+        }
+        Insert: {
+          actionable_how_to?: string | null
+          created_at?: string | null
+          curriculum_module_id?: string | null
+          founder_wisdom_pitfalls?: string | null
+          id?: string
+          key_questions?: string[] | null
+          resource_links?: Json | null
+          step_id: string
+          strategic_rationale?: string | null
+        }
+        Update: {
+          actionable_how_to?: string | null
+          created_at?: string | null
+          curriculum_module_id?: string | null
+          founder_wisdom_pitfalls?: string | null
+          id?: string
+          key_questions?: string[] | null
+          resource_links?: Json | null
+          step_id?: string
+          strategic_rationale?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guidance_content_curriculum_module_id_fkey"
+            columns: ["curriculum_module_id"]
+            isOneToOne: false
+            referencedRelation: "curriculum_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guidance_content_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: true
+            referencedRelation: "steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_templates: {
         Row: {
           business_type_tag: string

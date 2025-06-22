@@ -1,3 +1,4 @@
+// lib/data.ts (Corrected)
 import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -9,23 +10,16 @@ export const getSaaSBlueprint = cache(async (supabase: SupabaseClient) => {
       id,
       title,
       description,
-      business_type_tag,
-      created_at,
-      version,
       stages (
         id,
         title,
         objective,
         order_in_journey,
-        created_at,
-        journey_template_id,
         steps (
           id,
           title,
           is_essential,
           order_in_stage,
-          created_at,
-          stage_id,
           guidance_content(*),
           tasks (
             id,
@@ -43,28 +37,29 @@ export const getSaaSBlueprint = cache(async (supabase: SupabaseClient) => {
     return null;
   }
 
-  // Sort the nested stages, steps, and tasks by their order
+  // Supabase returns one-to-one relations as a single-element array.
+  // We need to flatten this for each step.
   if (data && data.stages) {
-    data.stages.sort((a: any, b: any) => a.order_in_journey - b.order_in_journey);
     for (const stage of data.stages) {
       if (stage.steps) {
-        stage.steps.sort((a: any, b: any) => a.order_in_stage - b.order_in_stage);
-        for (const step of stage.steps) {
-          if (step.tasks) {
-            step.tasks.sort((a: any, b: any) => a.order_in_step - b.order_in_step);
+        for (const step of stage.steps as any) { // Use 'as any' to modify the type in-place
+          if (Array.isArray(step.guidance_content)) {
+            step.guidance_content = step.guidance_content[0] || null;
           }
         }
       }
     }
   }
 
-  // Map guidance_content arrays to a single object (or null) for each step
+  // Sort the nested stages, steps, and tasks by their order
   if (data && data.stages) {
+    data.stages.sort((a, b) => a.order_in_journey - b.order_in_journey);
     for (const stage of data.stages) {
       if (stage.steps) {
+        stage.steps.sort((a, b) => a.order_in_stage - b.order_in_stage);
         for (const step of stage.steps) {
-          if (Array.isArray(step.guidance_content)) {
-            step.guidance_content = step.guidance_content[0] || null;
+          if (step.tasks) {
+            step.tasks.sort((a, b) => a.order_in_step - b.order_in_step);
           }
         }
       }

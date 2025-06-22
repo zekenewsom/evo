@@ -1,29 +1,22 @@
-// components/journey/GuidancePanel.tsx
+// components/journey/GuidancePanel.tsx (Corrected)
 'use client';
 
-// Local type for guidance content, matching your DB fields
-export type GuidanceContent = {
-  id: string;
-  strategic_rationale?: string | null;
-  actionable_how_to?: string | null;
-  founder_wisdom_pitfalls?: string | null;
-  key_questions?: string[] | null;
-};
+import type { Tables } from '@/lib/database.types'; // Use generated types
 import { XMarkIcon } from '@heroicons/react/24/solid';
 
 type GuidancePanelProps = {
-  guidance: GuidanceContent;
+  guidance: Tables<'guidance_content'>; // Use the real type
   onClose: () => void;
 };
 
 export default function GuidancePanel({ guidance, onClose }: GuidancePanelProps) {
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
+    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out animate-slide-in">
       <div className="flex flex-col h-full">
         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
           <h2 className="text-xl font-bold text-primary">Evo Perspective</h2>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-700">
-            <XMarkIcon className="w-6 h-6" />
+            <XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} />
           </button>
         </div>
         <div className="flex-grow p-6 overflow-y-auto">
@@ -49,7 +42,7 @@ export default function GuidancePanel({ guidance, onClose }: GuidancePanelProps)
             <div>
               <h3 className="font-semibold text-slate-300 mb-2">Key Questions to Ask Yourself</h3>
               <ul className="list-disc list-inside space-y-2 text-slate-400">
-                {guidance.key_questions.map((q: string, index: number) => (
+                {guidance.key_questions.map((q, index) => (
                   <li key={index}>{q}</li>
                 ))}
               </ul>

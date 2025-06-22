@@ -8,7 +8,8 @@ type TaskItemProps = {
 export default function TaskItem({ task }: TaskItemProps) {
   return (
     <div className="flex items-center gap-3 py-2">
-      <CheckCircleIcon className="w-3 h-3 text-slate-500" width={12} height={12} />
+      {/* FIX: Using inline style for guaranteed sizing */}
+      <CheckCircleIcon className="text-slate-500" style={{ width: '1.25rem', height: '1.25rem' }} />
       <p className="text-slate-300">{task.title}</p>
     </div>
   );

@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { Tables } from '@/lib/database.types';
-import StepItem from './StepItem';
+import StepItem, { type StepWithDetails } from './StepItem';
 import { ChevronDownIcon } from '@heroicons/react/24/solid';
+import type { Tables } from '@/lib/database.types';
 
-import type { StepWithDetails } from './StepItem';
-// Update the Stage type to include the new detailed Step type
 type StageWithDetails = Tables<'stages'> & {
   steps: StepWithDetails[];
 };
@@ -32,10 +30,10 @@ export default function StageCard({ stage, onStepSelect }: StageCardProps) {
           <h2 className="text-2xl font-bold text-slate-100">{stage.title}</h2>
           <p className="text-slate-400">{stage.objective}</p>
         </div>
+        {/* FIX: Using inline style for guaranteed sizing */}
         <ChevronDownIcon
-          className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          style={{ width: '1.5rem', height: '1.5rem' }}
         />
       </div>
 
