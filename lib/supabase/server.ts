@@ -1,10 +1,8 @@
-// lib/supabase/server.ts (The Definitive Fix)
+// lib/supabase/server.ts (Corrected)
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-// NOTE: This function is now async
 export async function createSupabaseServerClient() {
-  // FIX: Added 'await' to the cookies() call
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -16,42 +14,12 @@ export async function createSupabaseServerClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options) {
-          try {
-            // Use object signature for compatibility
-            cookieStore.set({ name, value, ...options });
-          } catch (_error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
-          }
+          try { cookieStore.set({ name, value, ...options }); } catch (_error) { /* Ignored */ }
         },
         remove(name: string, options) {
-          try {
-            // Use object signature for compatibility
-            cookieStore.delete({ name, ...options });
-          } catch (_error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
-          }
+          try { cookieStore.set({ name, value: '', ...options }); } catch (_error) { /* Ignored */ }
         },
       },
     }
-  );
-}
-
-
-// FIX: This function is also now async
-export async function createSupabaseServerActionClient() {
-  // FIX: Added 'await' to the cookies() call
-  const cookieStore = await cookies();
-  return createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-          cookies: {
-              get: (name) => cookieStore.get(name)?.value,
-              set: (name, value, options) => cookieStore.set({ name, value, ...options }),
-              remove: (name, options) => cookieStore.delete({ name, ...options }),
-          },
-      }
   );
 }

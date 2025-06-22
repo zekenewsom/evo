@@ -9,11 +9,10 @@ import { ChevronDownIcon } from '@heroicons/react/24/solid';
 
 type StageCardProps = {
   stage: StageWithDetails;
-  onStepSelect: (step: StepWithDetails) => void;
   userJourneyId: string;
 };
 
-export default function StageCard({ stage, onStepSelect, userJourneyId }: StageCardProps) {
+export default function StageCard({ stage, userJourneyId }: StageCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700 shadow-lg overflow-hidden">
