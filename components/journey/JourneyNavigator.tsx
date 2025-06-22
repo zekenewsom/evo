@@ -1,32 +1,30 @@
 // components/journey/JourneyNavigator.tsx (Refactored for Roadmap View)
 'use client';
-import StageCard from './StageCard';
+import StageColumn from './StageColumn';
 import type { JourneyData } from '@/lib/types';
 
 type JourneyNavigatorProps = {
   journeyData: JourneyData;
   userJourneyId: string;
+  selectedStepId: string | null;
+  setSelectedStepId: (stepId: string) => void;
 };
 
-export default function JourneyNavigator({ journeyData, userJourneyId }: JourneyNavigatorProps) {
+export default function JourneyNavigator({ journeyData, userJourneyId, selectedStepId, setSelectedStepId }: JourneyNavigatorProps) {
   if (!journeyData || !journeyData.stages) {
     return <p>No journey data available.</p>;
   }
 
   return (
-    <div className="flex items-start p-4 space-x-8 overflow-x-auto">
+    <div className="flex items-start p-4 gap-8 overflow-x-auto">
       {journeyData.stages.map((stage, index) => (
-        <div key={stage.id} className="flex items-center">
-          {/* Render the Stage Node */}
-          <StageCard
-            stage={stage as any}
-            userJourneyId={userJourneyId}
-          />
-          {/* Render a connector line, but not after the last stage */}
-          {index < journeyData.stages.length - 1 && (
-            <div className="w-16 h-1 bg-slate-700 mx-4"></div>
-          )}
-        </div>
+        <StageColumn
+          key={stage.id}
+          stage={stage as any}
+          userJourneyId={userJourneyId}
+          selectedStepId={selectedStepId}
+          setSelectedStepId={setSelectedStepId}
+        />
       ))}
     </div>
   );
