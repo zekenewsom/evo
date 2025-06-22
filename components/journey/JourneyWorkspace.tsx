@@ -1,46 +1,62 @@
 'use client';
 
-import { useState } from 'react';
-import type { JourneyData } from '@/lib/types';
+import { useState, useMemo } from 'react';
+import type { JourneyData, StepWithDetails } from '@/lib/types';
+import JourneySidebar from './JourneySidebar';
+import KanbanBoard from './KanbanBoard';
+import GuidanceColumn from './GuidanceColumn';
+
 
 type JourneyWorkspaceProps = {
   journeyData: JourneyData;
 };
 
 export default function JourneyWorkspace({ journeyData }: JourneyWorkspaceProps) {
-  // This state will control which step is displayed in the workspace and guidance panel.
   const [selectedStepId, setSelectedStepId] = useState<string | null>(() => {
-    // Default to selecting the first step of the first stage
-    if (journeyData.stages && journeyData.stages.length > 0) {
-      if (journeyData.stages[0].steps && journeyData.stages[0].steps.length > 0) {
-        return journeyData.stages[0].steps[0].id;
-      }
+    if (journeyData.stages?.[0]?.steps?.[0]) {
+      return journeyData.stages[0].steps[0].id;
     }
     return null;
   });
 
+  const selectedStep = useMemo(() => {
+    if (!selectedStepId) return null;
+    for (const stage of journeyData.stages) {
+      const step = stage.steps.find(s => s.id === selectedStepId);
+      if (step) return step as StepWithDetails;
+    }
+    return null;
+  }, [selectedStepId, journeyData.stages]);
+
+
   return (
-    <div className="flex w-full h-[calc(100vh-120px)] max-w-screen-2xl mx-auto gap-6 px-4">
+    <div className="flex w-full h-[calc(100vh-120px)] max-w-screen-2xl mx-auto gap-4 p-4">
       {/* ===== Left Column: Navigation Sidebar ===== */}
-      <div className="w-1/4 max-w-xs bg-slate-900 rounded-lg p-4 shadow-md">
-        <h2 className="text-lg font-bold text-white mb-4">Journey Overview</h2>
-        <p className="text-slate-400">Phase 2: JourneySidebar will be implemented here.</p>
-        {/* We will pass journeyData and the setSelectedStepId function here */}
+      <div className="w-[22rem] flex-shrink-0 bg-slate-900/70 rounded-lg shadow-md overflow-hidden">
+        <JourneySidebar
+          journeyData={journeyData}
+          selectedStepId={selectedStepId}
+          onStepSelect={setSelectedStepId}
+        />
       </div>
 
       {/* ===== Center Column: Kanban Workspace ===== */}
-      <div className="flex-grow bg-slate-800/50 rounded-lg p-4 shadow-md">
-         <h2 className="text-lg font-bold text-white mb-4">Workspace</h2>
-         <p className="text-slate-400">Phase 2: KanbanBoard will be implemented here.</p>
-         <p className="text-slate-500 mt-4">Selected Step ID: {selectedStepId || 'None'}</p>
-         {/* We will find the selected step from journeyData and pass its tasks here */}
+      <div className="flex-grow rounded-lg min-w-0">
+        {selectedStep ? (
+          <KanbanBoard
+            key={selectedStep.id} // Re-mount board when step changes
+            tasks={selectedStep.tasks}
+            userJourneyId={journeyData.id} // This needs fixing - journey ID is on user_journeys not templates
+            stepId={selectedStep.id}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-slate-400">Select a step to begin.</div>
+        )}
       </div>
 
       {/* ===== Right Column: Guidance Panel ===== */}
-      <div className="w-1/4 max-w-md bg-slate-900 rounded-lg p-4 shadow-md">
-         <h2 className="text-lg font-bold text-white mb-4">Evo Guidance</h2>
-         <p className="text-slate-400">Phase 2: Guidance column will be implemented here.</p>
-         {/* We will find the selected step from journeyData and pass its guidance content here */}
+      <div className="w-[24rem] flex-shrink-0 bg-slate-900/70 rounded-lg shadow-md overflow-hidden">
+        <GuidanceColumn guidance={selectedStep?.guidance_content || null} />
       </div>
     </div>
   );
