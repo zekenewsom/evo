@@ -28,11 +28,11 @@ export async function startSaaSJourney() {
   if (journeyError) { return { error: 'Failed to start your journey.' }; }
 
   const progressItems: any[] = [];
-  blueprint.stages.forEach(stage => {
+  (blueprint.stages as import('@/lib/types').StageWithDetails[]).forEach((stage: import('@/lib/types').StageWithDetails) => {
     progressItems.push({ user_journey_id: userJourney.id, item_id: stage.id, item_type: 'stage' });
-    stage.steps.forEach(step => {
+    (stage.steps as import('@/lib/types').StepWithDetails[]).forEach((step: import('@/lib/types').StepWithDetails) => {
       progressItems.push({ user_journey_id: userJourney.id, item_id: step.id, item_type: 'step' });
-      step.tasks.forEach(task => {
+      (step.tasks as import('@/lib/types').TaskWithStatus[]).forEach((task: import('@/lib/types').TaskWithStatus) => {
         progressItems.push({ user_journey_id: userJourney.id, item_id: task.id, item_type: 'task' });
       });
     });

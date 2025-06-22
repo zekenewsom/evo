@@ -59,7 +59,7 @@ export default function StepWorkspace({ journeyId, stepId, saveAction }: StepWor
           </div>
           <div className="p-6 bg-slate-800 rounded-lg">
             <h2 className="text-xl font-bold mb-4">My Notes & Reflections</h2>
-            <form action={(formData) => startTransition(() => saveAction(formData))}>
+            <form action={saveAction as any}>
               <input type="hidden" name="journeyId" value={journeyId} />
               <input type="hidden" name="stepId" value={stepId} />
               <textarea
