@@ -2,6 +2,8 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getJourneyForUser } from '@/lib/data';
+// ADDITION: Import the new workspace component
+import JourneyWorkspace from '@/components/journey/JourneyWorkspace';
 import UserJourney from '@/components/journey/UserJourney';
 
 // Server component fetches data and passes to client component
@@ -32,5 +34,6 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
     );
   }
 
-  return <UserJourney journeyId={journeyId} journeyData={journeyData} />;
+  // MODIFICATION: Render the new JourneyWorkspace component instead of the old one.
+  return <JourneyWorkspace journeyData={journeyData} />;
 }
