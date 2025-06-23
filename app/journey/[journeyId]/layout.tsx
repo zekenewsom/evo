@@ -28,15 +28,10 @@ export default async function JourneyLayout({ children, params }: JourneyLayoutP
 
   const journeyData = await getJourneyForUser(supabase, journeyId, user.id);
   
-  let currentStageIndex = 0;
   let totalStages = 0;
 
   if (journeyData) {
     totalStages = journeyData.stages.length;
-    const firstIncompleteStageIndex = journeyData.stages.findIndex(
-      stage => (stage.completionPercentage ?? 0) < 100
-    );
-    currentStageIndex = firstIncompleteStageIndex === -1 ? totalStages - 1 : firstIncompleteStageIndex;
   }
   
   return (

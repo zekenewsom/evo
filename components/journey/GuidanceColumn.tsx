@@ -3,7 +3,7 @@
 
 import type { Tables } from '@/lib/database.types';
 import type { ResourceLink as ResourceLinkType, ResourceLinks } from '@/lib/types';
-import { XMarkIcon, LightBulbIcon, DocumentTextIcon, LinkIcon, BeakerIcon } from '@heroicons/react/24/outline';
+import { LightBulbIcon, DocumentTextIcon, LinkIcon, BeakerIcon } from '@heroicons/react/24/outline';
 
 // A helper to render different resource link types
 const ResourceLink = ({ link }: { link: ResourceLinkType }) => {
