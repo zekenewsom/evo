@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getJourneyForUser } from '@/lib/data';
 import { JourneyWorkspace } from '@/components/journey/JourneyWorkspace';
+import type { JourneyData } from '@/lib/types';
 
 type JourneyPageProps = {
   params: {
@@ -11,8 +12,7 @@ type JourneyPageProps = {
 };
 
 export default async function UserJourneyPage({ params }: JourneyPageProps) {
-  // MODIFICATION: No longer changing the order, this is the standard pattern.
-  const journeyId = params.journeyId;
+  const { journeyId } = await params;
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -20,9 +20,9 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
     redirect('/login');
   }
 
-  const journeyData = await getJourneyForUser(supabase, journeyId);
+  const journeyResult = await getJourneyForUser(supabase, journeyId);
 
-  if (!journeyData) {
+  if (!journeyResult) {
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold">Journey Not Found</h1>
@@ -31,6 +31,11 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
     );
   }
 
-  // MODIFICATION: Pass the data directly without creating a new variable.
+  // The journeyData now includes the userJourneyId from the getJourneyForUser function.
+  const journeyData = {
+      ...journeyResult,
+      userJourneyId: journeyId,
+  };
+
   return <JourneyWorkspace journeyData={journeyData} />;
 }

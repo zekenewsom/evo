@@ -5,7 +5,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-text-DEFAULT;
+    @apply bg-background text-text;
     /* This font is used in the screenshot. We will link to it in the layout. */
     font-family: 'Inter', sans-serif;
   }
@@ -15,7 +15,7 @@
     @apply text-text-medium;
   }
   .prose h3 {
-    @apply text-text-DEFAULT;
+    @apply text-text;
   }
   .prose ul > li::marker {
     @apply text-primary;

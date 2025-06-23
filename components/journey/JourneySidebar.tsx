@@ -45,7 +45,7 @@ const StepItem = ({ step, isSelected, isActive, onStepSelect }: { step: StepWith
     >
       <div className="flex-shrink-0">{getIcon()}</div>
       <div>
-        <h4 className={`font-semibold ${isSelected ? 'text-primary-DEFAULT' : 'text-text-DEFAULT'}`}>{step.title}</h4>
+        <h4 className={`font-semibold ${isSelected ? 'text-primary' : 'text-text'}`}>{step.title}</h4>
       </div>
     </div>
   );
@@ -70,7 +70,7 @@ export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { 
             <div className="absolute left-0 top-0">
               <ProgressCircle percentage={getStageProgress(stage)} />
             </div>
-            <h3 className="mb-2 font-bold text-text-DEFAULT">{stage.title}</h3>
+            <h3 className="mb-2 font-bold text-text">{stage.title}</h3>
             <div className="space-y-1">
               {stage.steps.map((step: StepWithDetails) => (
                 <StepItem
