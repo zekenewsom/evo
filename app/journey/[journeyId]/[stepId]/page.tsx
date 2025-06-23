@@ -1,6 +1,5 @@
 // app/journey/[journeyId]/[stepId]/page.tsx
-import StepWorkspace from '@/components/journey/StepWorkspace';
-import { saveUserInput } from '@/actions/journey';
+import StepWorkspaceServer from '@/components/journey/StepWorkspaceServer';
 
 type StepPageProps = {
   params: Promise<{
@@ -13,10 +12,9 @@ export default async function StepPage({ params }: StepPageProps) {
   const { journeyId, stepId } = await params;
 
   return (
-    <StepWorkspace 
+    <StepWorkspaceServer 
       journeyId={journeyId} 
       stepId={stepId} 
-      saveAction={saveUserInput} 
     />
   );
 }

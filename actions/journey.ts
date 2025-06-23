@@ -59,16 +59,22 @@ export async function startSaaSJourney() {
   redirect(`/journey/${userJourney.id}`);
 }
 
-export async function saveUserInput(formData: FormData) {
+export async function saveUserInput(formData: FormData): Promise<void> {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) { return { error: 'You must be logged in.' }; }
+  if (!user) { 
+    console.error('You must be logged in.');
+    return;
+  }
 
   const journeyId = formData.get('journeyId') as string;
   const stepId = formData.get('stepId') as string;
   const inputContent = formData.get('inputContent') as string;
 
-  if (!journeyId || !stepId) { return { error: 'Missing required IDs.' }; }
+  if (!journeyId || !stepId) {
+    console.error('Missing required IDs.');
+    return;
+  }
 
   const { error } = await supabase
     .from('user_inputs')
@@ -76,11 +82,12 @@ export async function saveUserInput(formData: FormData) {
   
   if (error) { 
     console.error('Error saving input:', error); 
-    return { error: 'Failed to save notes.' };
+    return;
   }
   
   revalidatePath(`/journey/${journeyId}/${stepId}`);
-  return { success: true, message: 'Saved!' };
+  // Optionally: revalidatePath(`/journey/${journeyId}`);
+  return;
 }
 
 

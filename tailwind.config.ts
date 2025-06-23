@@ -1,5 +1,3 @@
-// This is the complete and final content for this file.
-// Please ensure it contains ONLY this code.
 import type { Config } from "tailwindcss";
 
 const config: Config = {
