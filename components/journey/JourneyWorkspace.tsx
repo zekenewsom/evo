@@ -11,32 +11,32 @@ import { Bars3Icon } from '@heroicons/react/24/solid';
 const ResizableDivider = ({ onDrag, position }: { onDrag: (deltaX: number) => void; position: 'left' | 'right' }) => {
   const isDragging = useRef(false);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = () => {
     isDragging.current = true;
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging.current) return;
-    const deltaX = position === 'left' ? e.movementX : -e.movementX;
-    onDrag(deltaX);
-  };
-
-  const handleMouseUp = () => {
-    isDragging.current = false;
-    document.body.style.cursor = 'default';
-    document.body.style.userSelect = 'auto';
-  };
-
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const deltaX = position === 'left' ? e.movementX : -e.movementX;
+      onDrag(deltaX);
+    };
+
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [handleMouseMove, handleMouseUp]);
+  }, [onDrag, position]);
 
   return (
     <div
