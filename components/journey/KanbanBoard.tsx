@@ -4,7 +4,7 @@
 import { useState, useMemo, useTransition } from 'react';
 import type { TaskWithStatus } from '@/lib/types';
 import { KanbanColumn } from './KanbanColumn';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, Active, Over } from '@dnd-kit/core';
 import { KanbanTaskCard } from './KanbanTaskCard';
 import { updateTaskStatus } from '@/actions/journey';
 import { Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/solid';
@@ -18,9 +18,9 @@ type KanbanBoardProps = {
 
 export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<TaskWithStatus | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
-  
+
   const columns = useMemo(() => [
     { id: 'todo', title: 'To Do' },
     { id: 'inprogress', title: 'In Progress' },
@@ -30,7 +30,7 @@ export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanB
   const tasksByStatus = useMemo(() => {
     const tasksWithMockPriority = tasks.map((t, i) => ({ ...t, priority: i % 2 === 0 ? 'High' : 'Medium' }));
     return {
-      todo: tasksWithMockPriority.filter(t => t.status === 'todo'),
+      todo: tasksWithMockPriority.filter(t => t.status === 'todo' || t.status === 'not_started'), // Group not_started with todo
       inprogress: tasksWithMockPriority.filter(t => t.status === 'inprogress'),
       done: tasksWithMockPriority.filter(t => t.status === 'done'),
     };
@@ -47,12 +47,15 @@ export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanB
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const overId = over.data.current?.type === 'Column' ? over.id : over.data.current?.sortable?.containerId;
+    // Determine the target column ID
+    const overId = over.data.current?.type === 'Column' ? over.id : (over.data.current?.sortable?.containerId as string);
     if (!overId) return;
 
     const task = active.data.current?.task as TaskWithStatus;
-    if (task && task.status !== overId) {
-       startTransition(() => { updateTaskStatus(userJourneyId, stepId, task.id, overId as any); });
+    const newStatus = overId as 'todo' | 'inprogress' | 'done';
+
+    if (task && task.status !== newStatus) {
+       startTransition(() => { updateTaskStatus(userJourneyId, stepId, task.id, newStatus); });
     }
   }
 
@@ -70,7 +73,7 @@ export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanB
            <button onClick={() => setView('kanban')} className={`rounded-md p-1.5 transition-colors ${view === 'kanban' ? 'bg-white text-primary shadow-sm' : 'text-text-light hover:text-text'}`}>
             <Squares2X2Icon className="h-5 w-5"/>
           </button>
-        </div>
+         </div>
       </div>
       <div className="mb-2 h-1 w-full rounded-full bg-border">
           <div className="h-1 w-1/3 rounded-full bg-primary" />
@@ -79,7 +82,7 @@ export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanB
       <div className="flex flex-grow gap-5 overflow-x-auto">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
             {columns.map(col => (
-              <KanbanColumn
+             <KanbanColumn
                 key={col.id}
                 id={col.id}
                 title={`${col.title} (${tasksByStatus[col.id as keyof typeof tasksByStatus].length})`}

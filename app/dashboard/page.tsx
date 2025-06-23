@@ -4,8 +4,7 @@ import Link from "next/link";
 import { startSaaSJourney } from "@/actions/journey";
 
 export default async function DashboardPage() {
-  // FIX: Added 'await' here
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -19,6 +18,11 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .eq('status', 'active')
     .maybeSingle();
+
+  // Wrap startSaaSJourney to match the expected return type for form actions
+  const handleStartJourney = async () => {
+    await startSaaSJourney();
+  };
 
   return (
     <div className="p-6 w-full max-w-5xl mx-auto bg-slate-700 rounded-lg shadow-lg text-center">
@@ -37,7 +41,7 @@ export default async function DashboardPage() {
         <div className="bg-slate-600 p-8 rounded-lg">
           <h2 className="text-2xl font-bold text-slate-100">Ready to build your dream?</h2>
           <p className="text-slate-300 mt-2 mb-6">Start the &quot;SaaS Founder Blueprint&quot; to get a step-by-step guide from idea to revenue.</p>
-          <form action={startSaaSJourney}>
+          <form action={handleStartJourney}>
             <button type="submit" className="btn btn-primary btn-lg">
               Start SaaS Journey
             </button>

@@ -1,7 +1,7 @@
 // components/journey/JourneyNavigator.tsx (Refactored for Roadmap View)
 'use client';
 import StageColumn from './StageColumn';
-import type { JourneyData } from '@/lib/types';
+import type { JourneyData, StageWithDetails } from '@/lib/types';
 
 type JourneyNavigatorProps = {
   journeyData: JourneyData;
@@ -17,15 +17,15 @@ export default function JourneyNavigator({ journeyData, userJourneyId, selectedS
 
   return (
     <div className="flex items-start p-4 gap-8 overflow-x-auto">
-      {journeyData.stages.map((stage, index) => (
+      {journeyData.stages.map((stage: StageWithDetails) => (
         <StageColumn
           key={stage.id}
-          stage={stage as any}
+          stage={stage}
           userJourneyId={userJourneyId}
           selectedStepId={selectedStepId}
           setSelectedStepId={setSelectedStepId}
         />
       ))}
     </div>
-  );
+   );
 }

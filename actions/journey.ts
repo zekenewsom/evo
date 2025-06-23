@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 import type { StageWithDetails, StepWithDetails, TaskWithStatus } from '@/lib/types';
 
 export async function startSaaSJourney() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser(); // 
 
   if (!user) {
@@ -60,7 +60,7 @@ export async function startSaaSJourney() {
 }
 
 export async function saveUserInput(formData: FormData) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser(); // 
   if (!user) { return { error: 'You must be logged in.' }; } // 
 
@@ -129,7 +129,7 @@ async function updateParentStatuses(supabase: any, userJourneyId: string, stepId
 
 // NEW FUNCTION: Replaces toggleTaskStatus to support Kanban states
 export async function updateTaskStatus(userJourneyId: string, stepId: string, taskId: string, newStatus: 'todo' | 'inprogress' | 'done') {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   
   const completed_at = newStatus === 'done' ? new Date().toISOString() : null;
 
