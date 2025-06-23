@@ -36,7 +36,7 @@ const ResizableDivider = ({ onDrag, position }: { onDrag: (deltaX: number) => vo
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [position]);
+  }, [handleMouseMove, handleMouseUp]);
 
   return (
     <div

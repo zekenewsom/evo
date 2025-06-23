@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import type { StepWithDetails, StageWithDetails, JourneyWorkspaceData } from '@/lib/types';
-import { CheckCircleIcon, RadioIcon as InProgressIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { CircleIcon } from '@/components/icons';
 
 const ProgressCircle = ({ percentage }: { percentage: number }) => {
@@ -128,7 +128,7 @@ export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { 
         <p className="text-sm font-medium text-text-light">SaaS Blueprint</p>
       </div>
       <div className="flex-grow space-y-4 overflow-y-auto">
-        {journeyData.stages.map((stage: StageWithDetails, index: number) => {
+        {journeyData.stages.map((stage: StageWithDetails) => {
           const stageProgress = getStageProgress(stage);
           const isStageCompleted = stageProgress === 100;
           const isCollapsed = collapsedStages.has(stage.id);
