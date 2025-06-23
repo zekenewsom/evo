@@ -1,7 +1,7 @@
 // components/journey/JourneyWorkspace.tsx
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import type { JourneyWorkspaceData, StepWithDetails } from '@/lib/types';
 import { JourneySidebar } from './JourneySidebar';
 import { KanbanBoard } from './KanbanBoard';
@@ -10,33 +10,51 @@ import { Bars3Icon } from '@heroicons/react/24/solid';
 
 const ResizableDivider = ({ onDrag, position }: { onDrag: (deltaX: number) => void; position: 'left' | 'right' }) => {
   const isDragging = useRef(false);
+  const animationFrameRef = useRef<number | undefined>(undefined);
 
-  const handleMouseDown = () => {
+  const handleMouseDown = useCallback(() => {
     isDragging.current = true;
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  };
+  }, []);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging.current) return;
+    
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    // Use requestAnimationFrame for smooth updates
+    animationFrameRef.current = requestAnimationFrame(() => {
       const deltaX = position === 'left' ? e.movementX : -e.movementX;
       onDrag(deltaX);
-    };
+    });
+  }, [onDrag, position]);
 
-    const handleMouseUp = () => {
-      isDragging.current = false;
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'auto';
-    };
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+    document.body.style.cursor = 'default';
+    document.body.style.userSelect = 'auto';
+    
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+  }, []);
 
+  useEffect(() => {
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-  }, [onDrag, position]);
+  }, [handleMouseMove, handleMouseUp]);
 
   return (
     <div
@@ -66,15 +84,19 @@ export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspac
     return null;
   }, [selectedStepId, journeyData.stages]);
 
-  const handleSidebarResize = (deltaX: number) => {
-    const newWidth = Math.max(100, Math.min(1200, sidebarWidth + deltaX));
-    setSidebarWidth(newWidth);
-  };
+  const handleSidebarResize = useCallback((deltaX: number) => {
+    setSidebarWidth(prevWidth => {
+      const newWidth = Math.max(100, Math.min(1200, prevWidth + deltaX));
+      return newWidth;
+    });
+  }, []);
 
-  const handleGuidanceResize = (deltaX: number) => {
-    const newWidth = Math.max(100, Math.min(1200, guidanceWidth + deltaX));
-    setGuidanceWidth(newWidth);
-  };
+  const handleGuidanceResize = useCallback((deltaX: number) => {
+    setGuidanceWidth(prevWidth => {
+      const newWidth = Math.max(100, Math.min(1200, prevWidth + deltaX));
+      return newWidth;
+    });
+  }, []);
 
   return (
     <div className="flex h-full w-full">

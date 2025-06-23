@@ -111,7 +111,7 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
       </div>
       <p className="mb-4 text-sm text-text-medium">{completedTasks} of {totalTasks} tasks complete</p>
       {view === 'list' ? (
-        <div className="w-full max-w-2xl mx-auto space-y-3">
+        <div className="w-full space-y-3">
           {tasks.map(task => {
             const t = task as TaskWithStatus & { description?: string };
             const isSelected = selectedTaskId === t.id;
