@@ -8,7 +8,12 @@ import { KanbanTaskCard } from './KanbanTaskCard';
 import { useMemo } from 'react';
 
 export function KanbanColumn({ id, title, tasks }: { id: string; title: string; tasks: TaskWithStatus[] }) {
-  const { setNodeRef } = useDroppable({ id });
+  // Include type metadata so the drag handlers can
+  // differentiate between dropping on a column vs. a task
+  const { setNodeRef } = useDroppable({
+    id,
+    data: { type: 'Column' },
+  });
   const taskIds = useMemo(() => tasks.map(t => t.id), [tasks]);
 
   return (
