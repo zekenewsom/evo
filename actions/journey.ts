@@ -164,10 +164,15 @@ export async function updateTaskStatus(userJourneyId: string, stepId: string, ta
 
   const { error } = await supabase
     .from('user_progress')
-    .update({ status: newStatus, completed_at: completed_at })
-    .eq('user_journey_id', userJourneyId)
-    .eq('item_id', taskId)
-    .eq('item_type', 'task');
+    .upsert({ 
+      user_journey_id: userJourneyId,
+      item_id: taskId,
+      item_type: 'task',
+      status: newStatus, 
+      completed_at: completed_at 
+    }, { 
+      onConflict: 'user_journey_id,item_id,item_type' 
+    });
 
   if (error) {
     console.error("Failed to update task status:", error);

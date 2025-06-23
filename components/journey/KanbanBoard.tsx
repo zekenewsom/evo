@@ -18,6 +18,13 @@ type KanbanBoardProps = {
 
 type TaskStatus = 'todo' | 'inprogress' | 'done';
 
+// Helper function to normalize task status
+function normalizeTaskStatus(status: string): TaskStatus {
+  if (status === 'done') return 'done';
+  if (status === 'inprogress') return 'inprogress';
+  return 'todo'; // Default for 'todo', 'not_started', or any other status
+}
+
 export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTitle }: KanbanBoardProps) {
   const [tasks, setTasks] = useState(initialTasks);
   const [activeTask, setActiveTask] = useState<TaskWithStatus | null>(null);
@@ -40,8 +47,8 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
     
     return columns.reduce((acc, col) => {
         acc[col.id as TaskStatus] = tasksWithMockPriority.filter(task => {
-            const status = task.status === 'not_started' ? 'todo' : task.status;
-            return status === col.id;
+            const normalizedStatus = normalizeTaskStatus(task.status);
+            return normalizedStatus === col.id;
         });
         return acc;
     }, {} as Record<TaskStatus, (TaskWithStatus & { priority?: string })[]>);
@@ -65,7 +72,7 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
 
     if (!activeTask || !overId) return;
 
-    const originalStatus = activeTask.status === 'not_started' ? 'todo' : activeTask.status;
+    const originalStatus = normalizeTaskStatus(activeTask.status);
     const newStatus = overId as TaskStatus;
 
     if (originalStatus === newStatus) return;
@@ -80,7 +87,7 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
   }
 
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'done').length;
+  const completedTasks = tasks.filter(t => normalizeTaskStatus(t.status) === 'done').length;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
@@ -108,8 +115,9 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
           {tasks.map(task => {
             const t = task as TaskWithStatus & { description?: string };
             const isSelected = selectedTaskId === t.id;
-            const isInProgress = t.status === 'inprogress';
-            const isCompleted = t.status === 'done';
+            const normalizedStatus = normalizeTaskStatus(t.status);
+            const isInProgress = normalizedStatus === 'inprogress';
+            const isCompleted = normalizedStatus === 'done';
             return (
               <div
                 key={t.id}
