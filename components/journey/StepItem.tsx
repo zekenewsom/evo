@@ -11,7 +11,6 @@ type StepItemProps = {
 
 export default function StepItem({ step, userJourneyId }: StepItemProps) {
   const hasGuidance = !!step.guidance_content;
-  const isCompleted = step.status === 'completed';
 
   return (
     <div className="pl-6 py-4 border-l ml-6 transition-colors border-slate-700 rounded-r-lg">
@@ -27,12 +26,11 @@ export default function StepItem({ step, userJourneyId }: StepItemProps) {
         </div>
       </Link>
 
-      {/* The task list is now outside the link, so tasks can be clicked */}
       <div className="flex flex-col mt-2">
         {step.tasks.map((task) => (
           <TaskItem key={task.id} task={task} userJourneyId={userJourneyId} stepId={step.id} />
         ))}
       </div>
-    </div>
+     </div>
   );
 }

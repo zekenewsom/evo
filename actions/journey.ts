@@ -1,15 +1,19 @@
-// actions/journey.ts (Corrected & Consolidated)
+// actions/journey.ts
 'use server';
-
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import type { StageWithDetails, StepWithDetails, TaskWithStatus } from '@/lib/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-export async function startSaaSJourney() {
-  const supabase = await createSupabaseServerClient();
+export async function startSaaSJourney(): Promise<void> {
+  const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) { return { error: 'You must be logged in to start a journey.' }; }
+  if (!user) {
+    console.error('You must be logged in to start a journey.');
+    return;
+  }
 
   const { data: blueprint, error: blueprintError } = await supabase
     .from('journey_templates')
@@ -17,7 +21,10 @@ export async function startSaaSJourney() {
     .eq('title', 'SaaS Founder Blueprint')
     .single();
 
-  if (blueprintError || !blueprint) { return { error: 'Could not find the blueprint template.' }; }
+  if (blueprintError || !blueprint) {
+    console.error('Could not find the blueprint template.');
+    return;
+  }
 
   const { data: userJourney, error: journeyError } = await supabase
     .from('user_journeys')
@@ -25,117 +32,150 @@ export async function startSaaSJourney() {
     .select()
     .single();
 
-  if (journeyError) { return { error: 'Failed to start your journey.' }; }
+  if (journeyError) {
+    console.error('Failed to start your journey.');
+    return;
+  }
 
-  const progressItems: any[] = [];
-  (blueprint.stages as import('@/lib/types').StageWithDetails[]).forEach((stage: import('@/lib/types').StageWithDetails) => {
-    progressItems.push({ user_journey_id: userJourney.id, item_id: stage.id, item_type: 'stage' });
-    (stage.steps as import('@/lib/types').StepWithDetails[]).forEach((step: import('@/lib/types').StepWithDetails) => {
-      progressItems.push({ user_journey_id: userJourney.id, item_id: step.id, item_type: 'step' });
-      (step.tasks as import('@/lib/types').TaskWithStatus[]).forEach((task: import('@/lib/types').TaskWithStatus) => {
-        progressItems.push({ user_journey_id: userJourney.id, item_id: task.id, item_type: 'task' });
+  const progressItems: { user_journey_id: string; item_id: string; item_type: string; status: string; }[] = [];
+  (blueprint.stages as StageWithDetails[]).forEach((stage: StageWithDetails) => {
+    progressItems.push({ user_journey_id: userJourney.id, item_id: stage.id, item_type: 'stage', status: 'not_started' });
+    (stage.steps as StepWithDetails[]).forEach((step: StepWithDetails) => {
+      progressItems.push({ user_journey_id: userJourney.id, item_id: step.id, item_type: 'step', status: 'not_started' });
+      (step.tasks as TaskWithStatus[]).forEach((task: TaskWithStatus) => {
+        progressItems.push({
+          user_journey_id: userJourney.id,
+          item_id: task.id,
+          item_type: 'task',
+          status: 'todo'
+        });
       });
     });
   });
 
   const { error: progressError } = await supabase.from('user_progress').insert(progressItems);
 
-  if (progressError) { return { error: 'Failed to initialize your journey progress.' }; }
+  if (progressError) {
+    console.error('Failed to initialize your journey progress.');
+    return;
+  }
 
   revalidatePath('/dashboard');
+  revalidatePath(`/journey/${userJourney.id}`);
   redirect(`/journey/${userJourney.id}`);
 }
 
-
-export async function saveUserInput(formData: FormData) {
-  const supabase = await createSupabaseServerClient();
+export async function saveUserInput(formData: FormData): Promise<void> {
+  const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) { return { error: 'You must be logged in.' }; }
+  if (!user) { 
+    console.error('You must be logged in.');
+    return;
+  }
 
   const journeyId = formData.get('journeyId') as string;
   const stepId = formData.get('stepId') as string;
   const inputContent = formData.get('inputContent') as string;
 
-  if (!journeyId || !stepId) { return { error: 'Missing required IDs.' }; }
+  if (!journeyId || !stepId) {
+    console.error('Missing required IDs.');
+    return;
+  }
 
   const { error } = await supabase
     .from('user_inputs')
     .upsert({ user_journey_id: journeyId, step_id: stepId, input_content: inputContent }, { onConflict: 'user_journey_id,step_id' });
-
-  if (error) { console.error('Error saving input:', error); return { error: 'Failed to save notes.' }; }
+  
+  if (error) { 
+    console.error('Error saving input:', error); 
+    return;
+  }
   
   revalidatePath(`/journey/${journeyId}/${stepId}`);
-  return { success: true, message: 'Saved!' };
+  // Optionally: revalidatePath(`/journey/${journeyId}`);
+  return;
 }
 
-// New helper function to check and update parent statuses
-async function updateParentStatuses(supabase: any, userJourneyId: string, stepId: string) {
-  // Check if all tasks for the step are completed
-  const { data: tasks, error: tasksError } = await supabase
+
+async function updateParentStatuses(supabase: SupabaseClient, userJourneyId: string, stepId: string) {
+  const { data: stepDetails, error: tasksError } = await supabase
     .from('steps')
-    .select(`*, tasks!inner(user_progress!inner(status))`)
+    .select('id, stage_id, tasks(id)')
     .eq('id', stepId)
-    .eq('tasks.user_progress.user_journey_id', userJourneyId)
     .single();
 
-  if (tasksError) return;
+  if (tasksError || !stepDetails) return;
 
-  const allTasksCompleted = tasks.tasks.every((t: any) => t.user_progress[0].status === 'completed');
+  const taskIds = stepDetails.tasks.map((t: { id: string }) => t.id);
+  const { data: taskProgress, error: taskProgressError } = await supabase
+    .from('user_progress')
+    .select('status')
+    .eq('user_journey_id', userJourneyId)
+    .in('item_id', taskIds)
+    .eq('item_type', 'task');
+
+  if (taskProgressError) return;
+
+  const allTasksCompleted = taskProgress.every((p: { status: string }) => p.status === 'done');
 
   if (allTasksCompleted) {
-    // If all tasks are complete, mark the step as complete
     await supabase
       .from('user_progress')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('user_journey_id', userJourneyId)
-      .eq('item_id', stepId);
+      .eq('item_id', stepId)
+      .eq('item_type', 'step');
 
-    // Now, check if all steps for the parent stage are completed
-    const stageId = tasks.stage_id;
-    const { data: steps, error: stepsError } = await supabase
+    const stageId = stepDetails.stage_id;
+    const { data: stageDetails, error: stageDetailsError } = await supabase
       .from('stages')
-      .select(`*, steps!inner(user_progress!inner(status))`)
+      .select('id, steps(id)')
       .eq('id', stageId)
-      .eq('steps.user_progress.user_journey_id', userJourneyId)
       .single();
 
-    if (stepsError) return;
+    if (stageDetailsError || !stageDetails) return;
 
-    const allStepsCompleted = steps.steps.every((s: any) => s.user_progress[0].status === 'completed');
+    const stepIds = stageDetails.steps.map((s: { id: string }) => s.id);
+    const { data: stepProgress, error: stepProgressError } = await supabase
+      .from('user_progress')
+      .select('status')
+      .eq('user_journey_id', userJourneyId)
+      .in('item_id', stepIds)
+      .eq('item_type', 'step');
+
+    if (stepProgressError) return;
+
+    const allStepsCompleted = stepProgress.every((p: { status: string }) => p.status === 'completed');
 
     if (allStepsCompleted) {
-      // If all steps are complete, mark the stage as complete
       await supabase
         .from('user_progress')
         .update({ status: 'completed', completed_at: new Date().toISOString() })
         .eq('user_journey_id', userJourneyId)
-        .eq('item_id', stageId);
+        .eq('item_id', stageId)
+        .eq('item_type', 'stage');
     }
   }
 }
 
-// Updated toggleTaskStatus function
-export async function toggleTaskStatus(userJourneyId: string, stepId: string, taskId: string, currentStatus: string) {
-  const supabase = await createSupabaseServerClient();
-  const newStatus = currentStatus === 'completed' ? 'not_started' : 'completed';
+export async function updateTaskStatus(userJourneyId: string, stepId: string, taskId: string, newStatus: 'todo' | 'inprogress' | 'done') {
+  const supabase = createSupabaseServerClient();
+  const completed_at = newStatus === 'done' ? new Date().toISOString() : null;
 
   const { error } = await supabase
     .from('user_progress')
-    .update({ status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null })
+    .update({ status: newStatus, completed_at: completed_at })
     .eq('user_journey_id', userJourneyId)
     .eq('item_id', taskId)
     .eq('item_type', 'task');
 
   if (error) {
+    console.error("Failed to update task status:", error);
     return { error: 'Could not update the task status.' };
   }
 
-  // After toggling a task, check if its parents should be updated
   await updateParentStatuses(supabase, userJourneyId, stepId);
-
   revalidatePath(`/journey/${userJourneyId}`);
-  revalidatePath(`/journey/${userJourneyId}/${stepId}`);
   
   return { success: true };
 }

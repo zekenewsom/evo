@@ -4,8 +4,7 @@ import Link from "next/link";
 import { startSaaSJourney } from "@/actions/journey";
 
 export default async function DashboardPage() {
-  // FIX: Added 'await' here
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

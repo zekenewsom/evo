@@ -3,11 +3,21 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes slideInFromRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-.animate-slide-in {
-  animation: slideInFromRight 0.3s ease-in-out;
+@layer base {
+  body {
+    @apply bg-background text-text;
+    /* This font is used in the screenshot. We will link to it in the layout. */
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Custom styles for rendered content like in the guidance panel */
+  .prose {
+    @apply text-text-medium;
+  }
+  .prose h3 {
+    @apply text-text;
+  }
+  .prose ul > li::marker {
+    @apply text-primary;
+  }
 }
