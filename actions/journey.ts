@@ -6,12 +6,13 @@ import { redirect } from 'next/navigation';
 import type { StageWithDetails, StepWithDetails, TaskWithStatus } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export async function startSaaSJourney() {
+export async function startSaaSJourney(): Promise<void> {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'You must be logged in to start a journey.' };
+    console.error('You must be logged in to start a journey.');
+    return;
   }
 
   const { data: blueprint, error: blueprintError } = await supabase
@@ -21,7 +22,8 @@ export async function startSaaSJourney() {
     .single();
 
   if (blueprintError || !blueprint) {
-    return { error: 'Could not find the blueprint template.' };
+    console.error('Could not find the blueprint template.');
+    return;
   }
 
   const { data: userJourney, error: journeyError } = await supabase
@@ -30,7 +32,10 @@ export async function startSaaSJourney() {
     .select()
     .single();
 
-  if (journeyError) { return { error: 'Failed to start your journey.' }; }
+  if (journeyError) {
+    console.error('Failed to start your journey.');
+    return;
+  }
 
   const progressItems: { user_journey_id: string; item_id: string; item_type: string; status: string; }[] = [];
   (blueprint.stages as StageWithDetails[]).forEach((stage: StageWithDetails) => {
@@ -51,7 +56,8 @@ export async function startSaaSJourney() {
   const { error: progressError } = await supabase.from('user_progress').insert(progressItems);
 
   if (progressError) {
-    return { error: 'Failed to initialize your journey progress.' };
+    console.error('Failed to initialize your journey progress.');
+    return;
   }
 
   revalidatePath('/dashboard');
