@@ -12,7 +12,7 @@ const ProgressCircle = ({ percentage }: { percentage: number }) => {
     const offset = circumference - (percentage / 100) * circumference;
 
     return (
-        <svg className="h-7 w-7 -rotate-90">
+        <svg className="h-7 w-7 -rotate-90" viewBox="0 0 28 28">
             <circle className="text-border" strokeWidth={strokeWidth} stroke="currentColor" fill="transparent" r={radius} cx="14" cy="14" />
             <circle
                 className="text-primary"
@@ -30,11 +30,49 @@ const ProgressCircle = ({ percentage }: { percentage: number }) => {
     );
 };
 
+const StepProgressCircle = ({ percentage }: { percentage: number }) => {
+    const strokeWidth = 2;
+    const radius = 10;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    return (
+        <svg className="h-6 w-6 -rotate-90" viewBox="0 0 24 24">
+            <circle className="text-border" strokeWidth={strokeWidth} stroke="currentColor" fill="transparent" r={radius} cx="12" cy="12" />
+            <circle
+                className="text-primary"
+                strokeWidth={strokeWidth}
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                stroke="currentColor"
+                fill="transparent"
+                r={radius}
+                cx="12"
+                cy="12"
+            />
+        </svg>
+    );
+};
+
 const StepItem = ({ step, isSelected, isActive, onStepSelect }: { step: StepWithDetails; isSelected: boolean; isActive: boolean; onStepSelect: (id: string) => void }) => {
-  const isCompleted = step.status === 'completed';
+  // Calculate task completion percentage
+  const getTaskCompletionPercentage = () => {
+    if (!step.tasks || step.tasks.length === 0) return 0;
+    const completedTasks = step.tasks.filter(task => task.status === 'done').length;
+    return (completedTasks / step.tasks.length) * 100;
+  };
+
+  const taskCompletionPercentage = getTaskCompletionPercentage();
+  const isCompleted = taskCompletionPercentage === 100;
+
   const getIcon = () => {
-    if (isCompleted) return <CheckCircleIcon className="h-6 w-6 text-success" />;
-    if (isActive) return <InProgressIcon className="h-6 w-6 text-primary" />;
+    if (isCompleted) {
+      return <CheckCircleIcon className="h-6 w-6 text-success" />;
+    }
+    if (taskCompletionPercentage > 0 || isActive) {
+      return <StepProgressCircle percentage={taskCompletionPercentage} />;
+    }
     return <CircleIcon className="h-6 w-6 text-border" />;
   };
 
@@ -54,8 +92,19 @@ const StepItem = ({ step, isSelected, isActive, onStepSelect }: { step: StepWith
 export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { journeyData: JourneyWorkspaceData; selectedStepId: string | null; onStepSelect: (id: string) => void; }) {
   const getStageProgress = (stage: StageWithDetails) => {
     if (!stage.steps || stage.steps.length === 0) return 0;
-    const completedSteps = stage.steps.filter((s: StepWithDetails) => s.status === 'completed').length;
-    return (completedSteps / stage.steps.length) * 100;
+    
+    // Calculate total tasks and completed tasks across all steps in the stage
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    stage.steps.forEach((step: StepWithDetails) => {
+      if (step.tasks) {
+        totalTasks += step.tasks.length;
+        completedTasks += step.tasks.filter(task => task.status === 'done').length;
+      }
+    });
+    
+    return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
   };
   
   return (
@@ -64,26 +113,34 @@ export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { 
         <p className="text-sm font-medium text-text-light">SaaS Blueprint</p>
       </div>
       <div className="flex-grow space-y-6 overflow-y-auto">
-        {journeyData.stages.map((stage: StageWithDetails, index: number) => (
-          <div key={stage.id} className="relative pl-9">
-            {index < journeyData.stages.length - 1 && <div className="absolute left-[13px] top-[28px] h-full w-px bg-border" />}
-            <div className="absolute left-0 top-0">
-              <ProgressCircle percentage={getStageProgress(stage)} />
+        {journeyData.stages.map((stage: StageWithDetails, index: number) => {
+          const stageProgress = getStageProgress(stage);
+          const isStageCompleted = stageProgress === 100;
+          
+          return (
+            <div key={stage.id} className="relative pl-9">
+              <div className="absolute left-0 top-0">
+                {isStageCompleted ? (
+                  <CheckCircleIcon className="h-7 w-7 text-success" />
+                ) : (
+                  <ProgressCircle percentage={stageProgress} />
+                )}
+              </div>
+              <h3 className="mb-2 font-bold text-text">{stage.title}</h3>
+              <div className="space-y-1">
+                {stage.steps.map((step: StepWithDetails) => (
+                  <StepItem
+                    key={step.id}
+                    step={step}
+                    isSelected={selectedStepId === step.id}
+                    isActive={selectedStepId === step.id}
+                    onStepSelect={onStepSelect}
+                  />
+                ))}
+              </div>
             </div>
-            <h3 className="mb-2 font-bold text-text">{stage.title}</h3>
-            <div className="space-y-1">
-              {stage.steps.map((step: StepWithDetails) => (
-                <StepItem
-                  key={step.id}
-                  step={step}
-                  isSelected={selectedStepId === step.id}
-                  isActive={selectedStepId === step.id}
-                  onStepSelect={onStepSelect}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
