@@ -33,7 +33,6 @@ export function GuidanceColumn({ guidance, stepTitle }: { guidance: Tables<'guid
           <p className="text-sm font-semibold text-text">Evo Guidance</p>
           <p className="text-sm text-text-light">{stepTitle}</p>
         </div>
-        <button className="text-text-light transition-colors hover:text-text"><XMarkIcon className="h-5 w-5" /></button>
       </div>
 
       {/* Content */}

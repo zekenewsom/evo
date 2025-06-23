@@ -20,15 +20,16 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   return (
-    <div className="p-6 w-full max-w-5xl mx-auto bg-slate-700 rounded-lg shadow-lg text-center">
-      <h1 className="text-3xl font-bold mb-2 text-slate-100">Welcome to your Evo Dashboard,</h1>
-      <p className="text-lg text-primary mb-8">{user.email}</p>
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">
+      <div className="w-full max-w-3xl bg-slate-800 rounded-lg shadow-2xl p-8 text-center">
+        <h1 className="text-3xl font-bold mb-2 text-slate-100">Welcome to your Evo Dashboard,</h1>
+        <p className="text-lg text-primary mb-8">{user.email}</p>
 
       {activeJourney ? (
         <div className="bg-slate-600 p-8 rounded-lg">
           <h2 className="text-2xl font-bold text-slate-100">You&apos;re on your way!</h2>
           <p className="text-slate-300 mt-2 mb-6">You have an active journey in progress. Keep up the momentum!</p>
-          <Link href={`/journey/${activeJourney.id}`} className="btn btn-primary btn-lg">
+          <Link href={`/journey/${activeJourney.id}`} className="btn btn-primary btn-lg text-white px-8 py-3 rounded-full shadow-lg border-2 border-white transition-all duration-200 hover:bg-primary/90 hover:border-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
             Continue Your Journey
           </Link>
         </div>
@@ -43,6 +44,7 @@ export default async function DashboardPage() {
           </form>
         </div>
       )}
+      </div>
     </div>
   );
 }

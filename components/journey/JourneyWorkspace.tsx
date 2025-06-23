@@ -6,11 +6,14 @@ import type { JourneyWorkspaceData, StepWithDetails } from '@/lib/types';
 import { JourneySidebar } from './JourneySidebar';
 import { KanbanBoard } from './KanbanBoard';
 import { GuidanceColumn } from './GuidanceColumn';
+import { Bars3Icon } from '@heroicons/react/24/solid';
 
 export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspaceData }) {
   const [selectedStepId, setSelectedStepId] = useState<string | null>(() => {
     return journeyData.stages?.[0]?.steps?.[0]?.id || null;
   });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [guidanceCollapsed, setGuidanceCollapsed] = useState(false);
 
   const selectedStep = useMemo(() => {
     if (!selectedStepId) return null;
@@ -23,12 +26,24 @@ export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspac
 
   return (
     <div className="flex h-full w-full max-w-screen-2xl mx-auto">
-      <div className="w-[22rem] flex-shrink-0">
-        <JourneySidebar
-          journeyData={journeyData}
-          selectedStepId={selectedStepId}
-          onStepSelect={setSelectedStepId}
-        />
+      {/* Collapsible Sidebar */}
+      <div className={`relative transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-[22rem]'} flex-shrink-0`}>
+        <div className={`h-full ${sidebarCollapsed ? 'bg-white border-r border-slate-200' : ''}`}>
+          <button
+            className="absolute top-4 right-4 z-10 bg-white border border-slate-300 rounded-full p-2 shadow-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <Bars3Icon className="h-6 w-6 text-slate-700" />
+          </button>
+          {!sidebarCollapsed && (
+            <JourneySidebar
+              journeyData={journeyData}
+              selectedStepId={selectedStepId}
+              onStepSelect={setSelectedStepId}
+            />
+          )}
+        </div>
       </div>
       <div className="flex-grow min-w-0">
         {selectedStep ? (
@@ -43,11 +58,22 @@ export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspac
           <div className="flex h-full items-center justify-center text-text-light">Select a step to begin.</div>
         )}
       </div>
-      <div className="w-[24rem] flex-shrink-0">
-        <GuidanceColumn
-          guidance={selectedStep?.guidance_content || null}
-          stepTitle={selectedStep?.title || 'Guidance'}
-        />
+      <div className={`relative transition-all duration-300 ${guidanceCollapsed ? 'w-16' : 'w-[24rem]'} flex-shrink-0`}>
+        <div className={`h-full ${guidanceCollapsed ? 'bg-white border-l border-slate-200' : ''}`}>
+          <button
+            className="absolute top-4 right-4 z-10 bg-white border border-slate-300 rounded-full p-2 shadow-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
+            onClick={() => setGuidanceCollapsed((c) => !c)}
+            aria-label={guidanceCollapsed ? 'Expand guidance' : 'Collapse guidance'}
+          >
+            <Bars3Icon className="h-6 w-6 text-slate-700" />
+          </button>
+          {!guidanceCollapsed && (
+            <GuidanceColumn
+              guidance={selectedStep?.guidance_content || null}
+              stepTitle={selectedStep?.title || 'Guidance'}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
