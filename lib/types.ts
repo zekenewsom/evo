@@ -16,6 +16,7 @@ export type StepWithDetails = Tables<'steps'> & {
 export type StageWithDetails = Tables<'stages'> & {
   status: string;
   steps: StepWithDetails[];
+  completionPercentage?: number;
 };
 
 export type JourneyWorkspaceData = Tables<'journey_templates'> & {

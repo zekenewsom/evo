@@ -1,7 +1,7 @@
 // components/journey/JourneySidebar.tsx
 'use client';
 
-import type { JourneyData, StepWithDetails } from '@/lib/types';
+import type { StepWithDetails, StageWithDetails, JourneyWorkspaceData } from '@/lib/types';
 import { CheckCircleIcon, RadioIcon as InProgressIcon } from '@heroicons/react/24/solid';
 import { CircleIcon } from '@/components/icons';
 
@@ -51,10 +51,10 @@ const StepItem = ({ step, isSelected, isActive, onStepSelect }: { step: StepWith
   );
 };
 
-export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { journeyData: any; selectedStepId: string | null; onStepSelect: (id: string) => void; }) {
-  const getStageProgress = (stage: any) => {
+export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { journeyData: JourneyWorkspaceData; selectedStepId: string | null; onStepSelect: (id: string) => void; }) {
+  const getStageProgress = (stage: StageWithDetails) => {
     if (!stage.steps || stage.steps.length === 0) return 0;
-    const completedSteps = stage.steps.filter((s: any) => s.status === 'completed').length;
+    const completedSteps = stage.steps.filter((s: StepWithDetails) => s.status === 'completed').length;
     return (completedSteps / stage.steps.length) * 100;
   };
   
@@ -64,7 +64,7 @@ export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { 
         <p className="text-sm font-medium text-text-light">SaaS Blueprint</p>
       </div>
       <div className="flex-grow space-y-6 overflow-y-auto">
-        {journeyData.stages.map((stage: any, index: number) => (
+        {journeyData.stages.map((stage: StageWithDetails, index: number) => (
           <div key={stage.id} className="relative pl-9">
             {index < journeyData.stages.length - 1 && <div className="absolute left-[13px] top-[28px] h-full w-px bg-border" />}
             <div className="absolute left-0 top-0">

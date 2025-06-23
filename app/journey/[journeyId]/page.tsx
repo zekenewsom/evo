@@ -3,7 +3,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getJourneyForUser } from '@/lib/data';
 import { JourneyWorkspace } from '@/components/journey/JourneyWorkspace';
-import type { JourneyData } from '@/lib/types';
+
+// import type { JourneyData } from '@/lib/types'; // Removed unused import
 
 type JourneyPageProps = {
   params: {
@@ -20,7 +21,7 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
     redirect('/login');
   }
 
-  const journeyResult = await getJourneyForUser(supabase, journeyId);
+  const journeyResult = await getJourneyForUser(supabase, journeyId, user.id);
 
   if (!journeyResult) {
     return (
