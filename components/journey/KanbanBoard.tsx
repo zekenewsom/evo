@@ -8,7 +8,6 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, u
 import { KanbanTaskCard } from './KanbanTaskCard';
 import { updateTaskStatus } from '@/actions/journey';
 import { Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/solid';
-import { useRouter } from 'next/navigation';
 
 type KanbanBoardProps = {
   tasks: TaskWithStatus[];
@@ -25,7 +24,6 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
   const [view, setView] = useState<'kanban' | 'list'>('list');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-  const router = useRouter();
 
   useEffect(() => {
     setTasks(initialTasks);
