@@ -84,6 +84,16 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
   const completedTasks = tasks.filter(t => t.status === 'done').length;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
+  // Hardcoded subtext for each task (example, should match your real data)
+  const taskSubtext: Record<string, string> = {
+    // Replace these with your real task IDs and subtexts
+    // Example:
+    // 'task-id-1': 'Create structured questions focusing on pain points and workflows',
+    // 'task-id-2': 'Identify and schedule interviews with ideal customer profiles',
+    // 'task-id-3': 'Execute 30-45 minute structured interviews',
+    // 'task-id-4': 'Compile findings and identify patterns',
+  };
+
   return (
     <div className="flex h-full flex-col bg-workspace p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -107,14 +117,15 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
       {view === 'list' ? (
         <div className="w-full max-w-2xl mx-auto space-y-3">
           {tasks.map((task, idx) => {
-            const isSelected = selectedTaskId === task.id;
-            const isInProgress = idx === 1; // Second task is in progress (badge)
-            const isCompleted = task.status === 'done';
+            const t = task as TaskWithStatus & { description?: string };
+            const isSelected = selectedTaskId === t.id;
+            const isInProgress = t.status === 'inprogress';
+            const isCompleted = t.status === 'done';
             return (
               <div
-                key={task.id}
+                key={t.id}
                 className={`flex items-center justify-between px-5 py-4 rounded-xl border transition-all shadow-sm bg-white ${isSelected ? 'border-primary/70 bg-primary/5' : 'border-slate-200'} ${isCompleted ? 'opacity-70' : ''}`}
-                onClick={() => setSelectedTaskId(task.id)}
+                onClick={() => setSelectedTaskId(t.id)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className="flex items-center gap-4">
@@ -122,7 +133,12 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
                     onClick={e => {
                       e.stopPropagation();
                       const newStatus = isCompleted ? 'todo' : 'done';
-                      updateTaskStatus(userJourneyId, stepId, task.id, newStatus);
+                      setTasks(currentTasks => currentTasks.map(ct =>
+                        ct.id === t.id ? { ...ct, status: newStatus } : ct
+                      ));
+                      startTransition(() => {
+                        updateTaskStatus(userJourneyId, stepId, t.id, newStatus);
+                      });
                     }}
                     className={`w-5 h-5 flex items-center justify-center rounded border-2 ${isCompleted ? 'border-primary bg-primary' : 'border-slate-300 bg-white'} transition-colors`}
                     aria-label={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
@@ -132,10 +148,10 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
                     )}
                   </button>
                   <div>
-                    <div className={`font-medium text-base text-slate-900`}>{task.title}</div>
-                    {isSelected && (
+                    <div className={`font-medium text-base text-slate-900`}>{t.title}</div>
+                    {t.description && (
                       <div className="text-xs text-slate-500">
-                        Create structured questions focusing on pain points and workflows
+                        {t.description}
                       </div>
                     )}
                   </div>
