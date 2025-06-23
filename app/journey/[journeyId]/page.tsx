@@ -11,10 +11,9 @@ type JourneyPageProps = {
 };
 
 export default async function UserJourneyPage({ params }: JourneyPageProps) {
-  const supabase = await createSupabaseServerClient();
-  
+  // MODIFICATION: No longer changing the order, this is the standard pattern.
   const journeyId = params.journeyId;
-  
+  const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -32,10 +31,6 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
     );
   }
 
-  const workspaceData = {
-    ...journeyData,
-    userJourneyId: journeyId
-  };
-
-  return <JourneyWorkspace journeyData={workspaceData} />;
+  // MODIFICATION: Pass the data directly without creating a new variable.
+  return <JourneyWorkspace journeyData={journeyData} />;
 }
