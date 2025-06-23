@@ -5,15 +5,14 @@ import { getJourneyForUser } from '@/lib/data';
 import { JourneyWorkspace } from '@/components/journey/JourneyWorkspace';
 
 // Define the correct type for the props
+// params must be a Promise<{ journeyId: string }>
 type JourneyPageProps = {
-  params: {
+  params: Promise<{
     journeyId: string;
-  };
+  }>;
 };
 
-// The function is async, and we now await params
 export default async function UserJourneyPage({ params }: JourneyPageProps) {
-  // CORRECTED: 'await' is used here to satisfy the Next.js runtime
   const { journeyId } = await params;
   
   const supabase = createSupabaseServerClient();
