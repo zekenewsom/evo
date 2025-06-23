@@ -8,7 +8,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, u
 import { KanbanTaskCard } from './KanbanTaskCard';
 import { updateTaskStatus } from '@/actions/journey';
 import { Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/solid';
-import TaskItem from './TaskItem';
+import { useRouter } from 'next/navigation';
 
 type KanbanBoardProps = {
   tasks: TaskWithStatus[];
@@ -25,6 +25,7 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
   const [view, setView] = useState<'kanban' | 'list'>('list');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const router = useRouter();
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -84,16 +85,6 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
   const completedTasks = tasks.filter(t => t.status === 'done').length;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  // Hardcoded subtext for each task (example, should match your real data)
-  const taskSubtext: Record<string, string> = {
-    // Replace these with your real task IDs and subtexts
-    // Example:
-    // 'task-id-1': 'Create structured questions focusing on pain points and workflows',
-    // 'task-id-2': 'Identify and schedule interviews with ideal customer profiles',
-    // 'task-id-3': 'Execute 30-45 minute structured interviews',
-    // 'task-id-4': 'Compile findings and identify patterns',
-  };
-
   return (
     <div className="flex h-full flex-col bg-workspace p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -116,7 +107,7 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
       <p className="mb-4 text-sm text-text-medium">{completedTasks} of {totalTasks} tasks complete</p>
       {view === 'list' ? (
         <div className="w-full max-w-2xl mx-auto space-y-3">
-          {tasks.map((task, idx) => {
+          {tasks.map(task => {
             const t = task as TaskWithStatus & { description?: string };
             const isSelected = selectedTaskId === t.id;
             const isInProgress = t.status === 'inprogress';
