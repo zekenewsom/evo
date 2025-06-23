@@ -20,9 +20,10 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   return (
-    <div className="p-6 w-full max-w-5xl mx-auto bg-slate-700 rounded-lg shadow-lg text-center">
-      <h1 className="text-3xl font-bold mb-2 text-slate-100">Welcome to your Evo Dashboard,</h1>
-      <p className="text-lg text-primary mb-8">{user.email}</p>
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">
+      <div className="w-full max-w-3xl bg-slate-800 rounded-lg shadow-2xl p-8 text-center">
+        <h1 className="text-3xl font-bold mb-2 text-slate-100">Welcome to your Evo Dashboard,</h1>
+        <p className="text-lg text-primary mb-8">{user.email}</p>
 
       {activeJourney ? (
         <div className="bg-slate-600 p-8 rounded-lg">
@@ -43,6 +44,7 @@ export default async function DashboardPage() {
           </form>
         </div>
       )}
+      </div>
     </div>
   );
 }
