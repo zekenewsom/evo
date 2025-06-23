@@ -1,3 +1,4 @@
+// app/journey/[journeyId]/layout.tsx
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getJourneyForUser } from '@/lib/data';
@@ -5,14 +6,18 @@ import Link from 'next/link';
 import { AuthButton } from '@/components/AuthButton';
 import { MagnifyingGlassIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
-export default async function JourneyLayout({
-  children,
-  params,
-}: {
+// Define the correct type for the props
+type JourneyLayoutProps = {
   children: React.ReactNode;
-  params: Promise<{ journeyId: string }>;
-}) {
-  const { journeyId } = await params;
+  params: {
+    journeyId: string;
+  };
+};
+
+// The function is async, and we now await params as required by the Next.js runtime
+export default async function JourneyLayout({ children, params }: JourneyLayoutProps) {
+  // CORRECTED: 'await' is used here to satisfy the Next.js runtime
+  const { journeyId } = await params; 
   
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -21,7 +26,6 @@ export default async function JourneyLayout({
     redirect('/login');
   }
 
-  // Fetch journey data to calculate stage progress
   const journeyData = await getJourneyForUser(supabase, journeyId, user.id);
   
   let currentStageIndex = 0;
@@ -29,11 +33,9 @@ export default async function JourneyLayout({
 
   if (journeyData) {
     totalStages = journeyData.stages.length;
-    // Find the first stage that is not 100% complete
     const firstIncompleteStageIndex = journeyData.stages.findIndex(
       stage => (stage.completionPercentage ?? 0) < 100
     );
-    // If all stages are complete, show the last stage. Otherwise, show the first incomplete one.
     currentStageIndex = firstIncompleteStageIndex === -1 ? totalStages - 1 : firstIncompleteStageIndex;
   }
   
@@ -66,4 +68,4 @@ export default async function JourneyLayout({
         </div>
     </div>
   );
-} 
+}

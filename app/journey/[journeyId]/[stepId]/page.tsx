@@ -2,6 +2,7 @@
 import StepWorkspace from '@/components/journey/StepWorkspace';
 import { saveUserInput } from '@/actions/journey';
 
+// This type definition was already correct, but the function signature was not.
 type StepPageProps = {
   params: {
     journeyId: string;
@@ -9,9 +10,9 @@ type StepPageProps = {
   };
 };
 
-// The 'async' keyword is removed as it is not needed, and 'await' is removed from params.
+// CORRECTED: 'async' is not needed here as there are no 'await' calls inside.
 export default function StepPage({ params }: StepPageProps) {
-  // CORRECTED: The params object is directly available and should not be awaited.
+  // CORRECTED: Access params directly without 'await'
   const { journeyId, stepId } = params;
 
   return (

@@ -4,15 +4,16 @@ import { redirect } from 'next/navigation';
 import { getJourneyForUser } from '@/lib/data';
 import { JourneyWorkspace } from '@/components/journey/JourneyWorkspace';
 
-// import type { JourneyData } from '@/lib/types'; // Removed unused import
-
+// Define the correct type for the props
 type JourneyPageProps = {
-  params: Promise<{
+  params: {
     journeyId: string;
-  }>;
+  };
 };
 
+// The function is async, and we now await params
 export default async function UserJourneyPage({ params }: JourneyPageProps) {
+  // CORRECTED: 'await' is used here to satisfy the Next.js runtime
   const { journeyId } = await params;
   
   const supabase = createSupabaseServerClient();
@@ -22,8 +23,6 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
     redirect('/login');
   }
 
-  // Fetch journey data. This is efficient because getJourneyForUser is cached,
-  // so it won't re-fetch if the layout already did in the same request.
   const journeyData = await getJourneyForUser(supabase, journeyId, user.id);
 
   if (!journeyData) {
@@ -37,7 +36,6 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
     );
   }
 
-  // Add the userJourneyId to the data object for prop drilling
   const journeyWorkspaceData = {
       ...journeyData,
       userJourneyId: journeyId,

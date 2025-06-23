@@ -1,10 +1,10 @@
 // actions/journey.ts
 'use server';
-
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import type { StageWithDetails, StepWithDetails, TaskWithStatus } from '@/lib/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export async function startSaaSJourney() {
   const supabase = createSupabaseServerClient();
@@ -32,7 +32,7 @@ export async function startSaaSJourney() {
 
   if (journeyError) { return { error: 'Failed to start your journey.' }; }
 
-  const progressItems: any[] = [];
+  const progressItems: { user_journey_id: string; item_id: string; item_type: string; status: string; }[] = [];
   (blueprint.stages as StageWithDetails[]).forEach((stage: StageWithDetails) => {
     progressItems.push({ user_journey_id: userJourney.id, item_id: stage.id, item_type: 'stage', status: 'not_started' });
     (stage.steps as StepWithDetails[]).forEach((step: StepWithDetails) => {
@@ -83,7 +83,8 @@ export async function saveUserInput(formData: FormData) {
   return { success: true, message: 'Saved!' };
 }
 
-async function updateParentStatuses(supabase: any, userJourneyId: string, stepId: string) {
+
+async function updateParentStatuses(supabase: SupabaseClient, userJourneyId: string, stepId: string) {
   const { data: stepDetails, error: tasksError } = await supabase
     .from('steps')
     .select('id, stage_id, tasks(id)')
