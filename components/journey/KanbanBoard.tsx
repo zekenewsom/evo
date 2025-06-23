@@ -1,10 +1,10 @@
 // components/journey/KanbanBoard.tsx
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import type { TaskWithStatus } from '@/lib/types';
 import { KanbanColumn } from './KanbanColumn';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core';
 import { KanbanTaskCard } from './KanbanTaskCard';
 import { updateTaskStatus } from '@/actions/journey';
 import { Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/solid';
@@ -16,10 +16,17 @@ type KanbanBoardProps = {
   stepTitle: string;
 };
 
-export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanBoardProps) {
+type TaskStatus = 'todo' | 'inprogress' | 'done';
+
+export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTitle }: KanbanBoardProps) {
+  const [tasks, setTasks] = useState(initialTasks);
   const [activeTask, setActiveTask] = useState<TaskWithStatus | null>(null);
   const [, startTransition] = useTransition();
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
+
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
   const columns = useMemo(() => [
     { id: 'todo', title: 'To Do' },
@@ -29,35 +36,51 @@ export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanB
 
   const tasksByStatus = useMemo(() => {
     const tasksWithMockPriority = tasks.map((t, i) => ({ ...t, priority: i % 2 === 0 ? 'High' : 'Medium' }));
-    return {
-      todo: tasksWithMockPriority.filter(t => t.status === 'todo' || t.status === 'not_started'), // Group not_started with todo
-      inprogress: tasksWithMockPriority.filter(t => t.status === 'inprogress'),
-      done: tasksWithMockPriority.filter(t => t.status === 'done'),
-    };
-  }, [tasks]);
+    
+    return columns.reduce((acc, col) => {
+        acc[col.id as TaskStatus] = tasksWithMockPriority.filter(task => {
+            const status = task.status === 'not_started' ? 'todo' : task.status;
+            return status === col.id;
+        });
+        return acc;
+    }, {} as Record<TaskStatus, (TaskWithStatus & { priority?: string })[]>);
+  }, [tasks, columns]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function onDragStart(event: DragStartEvent) {
-    if (event.active.data.current?.type === 'Task') setActiveTask(event.active.data.current.task);
+    if (event.active.data.current?.type === 'Task') {
+      setActiveTask(event.active.data.current.task);
+    }
   }
 
   function onDragEnd(event: DragEndEvent) {
     setActiveTask(null);
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
-    // Determine the target column ID
-    const overId = over.data.current?.type === 'Column' ? over.id : (over.data.current?.sortable?.containerId as string);
-    if (!overId) return;
+    const activeTask = active.data.current?.task as TaskWithStatus;
+    const overId = over.data.current?.type === 'Column' ? over.id : over.data.current?.sortable?.containerId;
 
-    const task = active.data.current?.task as TaskWithStatus;
-    const newStatus = overId as 'todo' | 'inprogress' | 'done';
+    if (!activeTask || !overId) return;
 
-    if (task && task.status !== newStatus) {
-       startTransition(() => { updateTaskStatus(userJourneyId, stepId, task.id, newStatus); });
-    }
+    const originalStatus = activeTask.status === 'not_started' ? 'todo' : activeTask.status;
+    const newStatus = overId as TaskStatus;
+
+    if (originalStatus === newStatus) return;
+
+    setTasks(currentTasks => currentTasks.map(t => 
+        t.id === activeTask.id ? { ...t, status: newStatus } : t
+    ));
+
+    startTransition(() => {
+      updateTaskStatus(userJourneyId, stepId, activeTask.id, newStatus);
+    });
   }
+
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'done').length;
+  const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
     <div className="flex h-full flex-col bg-workspace p-6">
@@ -76,17 +99,17 @@ export function KanbanBoard({ tasks, userJourneyId, stepId, stepTitle }: KanbanB
          </div>
       </div>
       <div className="mb-2 h-1 w-full rounded-full bg-border">
-          <div className="h-1 w-1/3 rounded-full bg-primary" />
+          <div className="h-1 rounded-full bg-primary" style={{ width: `${progressPercentage}%` }} />
       </div>
-      <p className="mb-4 text-sm text-text-medium">2 of 6 tasks complete</p>
+      <p className="mb-4 text-sm text-text-medium">{completedTasks} of {totalTasks} tasks complete</p>
       <div className="flex flex-grow gap-5 overflow-x-auto">
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCorners}>
             {columns.map(col => (
              <KanbanColumn
                 key={col.id}
                 id={col.id}
-                title={`${col.title} (${tasksByStatus[col.id as keyof typeof tasksByStatus].length})`}
-                tasks={tasksByStatus[col.id as keyof typeof tasksByStatus]}
+                title={`${col.title} (${tasksByStatus[col.id as TaskStatus]?.length || 0})`}
+                tasks={tasksByStatus[col.id as TaskStatus] || []}
               />
             ))}
           <DragOverlay>{activeTask && <KanbanTaskCard task={activeTask} />}</DragOverlay>

@@ -11,7 +11,6 @@ export type StepDetailsForWorkspace = StepWithDetails & {
 
 export const getJourneyForUser = cache(
   async (supabase: SupabaseClient, userJourneyId: string, userId: string): Promise<JourneyData | null> => {
-    // ... (the initial query remains the same)
     const { data: userJourneyData, error: userJourneyError } = await supabase
     .from('user_journeys')
     .select(`
@@ -21,7 +20,7 @@ export const getJourneyForUser = cache(
         *,
         stages (
           *,
-           steps (
+          steps (
             *,
             guidance_content(*),
             tasks (*)
@@ -34,7 +33,7 @@ export const getJourneyForUser = cache(
     .single();
 
     if (userJourneyError || !userJourneyData) {
-        console.error('Error fetching user journey:', userJourneyError?.message);
+       console.error('Error fetching user journey:', userJourneyError?.message);
         return null;
     }
 
@@ -48,32 +47,43 @@ export const getJourneyForUser = cache(
     if (progressError) { return null; }
 
     const progressMap = new Map(progressData.map(p => [p.item_id, p.status]));
+
     // Merge progress and CALCULATE completion percentage
     journey.stages.forEach((stage: StageWithDetails) => {
+        // Stages and Steps can be 'not_started' or 'completed'
         stage.status = progressMap.get(stage.id) || 'not_started';
         let completedSteps = 0;
-        stage.steps.forEach((step: StepWithDetails) => {
-            step.status = progressMap.get(step.id) || 'not_started';
-            if (step.status === 'completed') {
-                completedSteps++;
-            }
-            if (Array.isArray(step.guidance_content)) {
-                step.guidance_content = step.guidance_content[0] || null;
-            }
-            step.tasks.forEach((task: TaskWithStatus) => {
-                task.status = progressMap.get(task.id) || 'not_started';
+        if (stage.steps) {
+            stage.steps.forEach((step: StepWithDetails) => {
+                step.status = progressMap.get(step.id) || 'not_started';
+                if (step.status === 'completed') {
+                    completedSteps++;
+                }
+                if (Array.isArray(step.guidance_content)) {
+                    step.guidance_content = step.guidance_content[0] || null;
+                }
+                if (step.tasks) {
+                    step.tasks.forEach((task: TaskWithStatus) => {
+                        // Tasks default to 'todo' if no status is found
+                        task.status = progressMap.get(task.id) || 'todo';
+                    });
+                    step.tasks.sort((a: TaskWithStatus, b: TaskWithStatus) => a.order_in_step - b.order_in_step);
+                }
             });
-            step.tasks.sort((a: TaskWithStatus, b: TaskWithStatus) => a.order_in_step - b.order_in_step);
-        });
-        // Add completion percentage to the stage object
-        stage.completionPercentage = stage.steps.length > 0 ? (completedSteps / stage.steps.length) * 100 : 0;
-        stage.steps.sort((a: StepWithDetails, b: StepWithDetails) => a.order_in_stage - b.order_in_stage);
+            // Add completion percentage to the stage object
+            stage.completionPercentage = stage.steps.length > 0 ? (completedSteps / stage.steps.length) * 100 : 0;
+            stage.steps.sort((a: StepWithDetails, b: StepWithDetails) => a.order_in_stage - b.order_in_stage);
+        } else {
+            stage.steps = [];
+            stage.completionPercentage = 0;
+        }
     });
     journey.stages.sort((a: StageWithDetails, b: StageWithDetails) => a.order_in_journey - b.order_in_journey);
 
     return journey;
   }
 );
+
 export const getStepDetailsForUser = cache(
   async (supabase: SupabaseClient, userJourneyId: string, stepId: string): Promise<StepDetailsForWorkspace | null> => {
     const { data: stepData, error: stepError } = await supabase
@@ -112,7 +122,7 @@ export const getStepDetailsForUser = cache(
     const progressMap = new Map(progressData?.map(p => [p.item_id, p.status]));
     const tasksWithStatus = stepData.tasks.map((task: TaskWithStatus) => ({
       ...task,
-      status: progressMap.get(task.id) || 'not_started',
+      status: progressMap.get(task.id) || 'todo',
     }));
 
     // This is where the error was. The type for the nested relation needs to be explicit.

@@ -9,8 +9,8 @@ type StepPageProps = {
   };
 };
 
-export default async function StepPage({ params }: StepPageProps) {
-  const { journeyId, stepId } = await params;
+export default function StepPage({ params }: StepPageProps) {
+  const { journeyId, stepId } = params;
   return (
     <StepWorkspace 
       journeyId={journeyId} 
