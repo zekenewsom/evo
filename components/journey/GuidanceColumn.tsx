@@ -1,55 +1,66 @@
+// components/journey/GuidanceColumn.tsx
 'use client';
 
 import type { Tables } from '@/lib/database.types';
+import { XMarkIcon, LightBulbIcon, DocumentTextIcon, LinkIcon } from '@heroicons/react/24/outline';
 
-type GuidanceColumnProps = {
-  guidance: Tables<'guidance_content'> | null;
-};
-
-export default function GuidanceColumn({ guidance }: GuidanceColumnProps) {
-  if (!guidance) {
-    return (
-      <div className="flex flex-col h-full p-6 items-center justify-center text-center">
-        <h3 className="font-semibold text-slate-300">No Guidance Available</h3>
-        <p className="text-sm text-slate-400">This step does not have associated guidance content.</p>
-      </div>
-    );
-  }
-
+export function GuidanceColumn({ guidance, stepTitle }: { guidance: Tables<'guidance_content'> | null; stepTitle: string; }) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-slate-800">
-        <h2 className="text-xl font-bold text-primary">Evo Guidance</h2>
+    <div className="flex h-full flex-col border-l border-border bg-guidance">
+      <div className="flex items-center justify-between border-b border-border p-4">
+        <div>
+          <p className="text-sm font-semibold text-text-DEFAULT">Evo Guidance</p>
+          <p className="text-sm text-text-light">{stepTitle}</p>
+        </div>
+        <button className="text-text-light transition-colors hover:text-text-DEFAULT"><XMarkIcon className="h-5 w-5" /></button>
       </div>
-      <div className="flex-grow p-4 overflow-y-auto">
-        {guidance.strategic_rationale && (
-          <div className="mb-6">
-            <h3 className="font-semibold text-slate-300 mb-2">Why This Matters</h3>
-            <p className="text-slate-400 text-sm prose">{guidance.strategic_rationale}</p>
+
+      <div className="flex-grow space-y-6 overflow-y-auto p-6">
+        {guidance?.strategic_rationale && (
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-text">Why This Matters</h3>
+            <p className="text-sm text-text-medium">{guidance.strategic_rationale}</p>
           </div>
         )}
-        {guidance.actionable_how_to && (
-          <div className="mb-6">
-            <h3 className="font-semibold text-slate-300 mb-2">Key Actions</h3>
-            <div className="text-slate-400 text-sm prose whitespace-pre-line">{guidance.actionable_how_to}</div>
-          </div>
-        )}
-        {guidance.key_questions && guidance.key_questions.length > 0 && (
-           <div className="mb-6">
-            <h3 className="font-semibold text-slate-300 mb-2">Reflection Questions</h3>
-            <ul className="list-disc list-inside space-y-2 text-slate-400 text-sm">
-              {guidance.key_questions.map((q, index) => (
-                <li key={index}>{q}</li>
-              ))}
+        
+        <div>
+            <h3 className="mb-3 text-sm font-semibold text-text-DEFAULT">Key Actions</h3>
+            <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-sm text-text-medium">
+                    <LightBulbIcon className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary-DEFAULT" />
+                    <span>Prepare open-ended questions that encourage storytelling.</span>
+                </li>
+                <li className="flex items-start gap-3 text-sm text-text-medium">
+                    <LightBulbIcon className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary-DEFAULT" />
+                    <span>Focus on understanding problems, not selling solutions.</span>
+                </li>
+                 <li className="flex items-start gap-3 text-sm text-text-medium">
+                    <LightBulbIcon className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary-DEFAULT" />
+                    <span>Record interviews for later analysis.</span>
+                </li>
             </ul>
-          </div>
+        </div>
+        
+        {guidance?.key_questions && (
+            <div>
+                <h3 className="mb-2 text-sm font-semibold text-text-DEFAULT">Reflection Questions</h3>
+                <p className="text-sm text-text-medium">{guidance.key_questions[0]}</p>
+            </div>
         )}
-        {guidance.founder_wisdom_pitfalls && (
-          <div className="p-4 bg-slate-800 border border-yellow-500/30 rounded-lg">
-            <h3 className="font-semibold text-yellow-400 mb-2">Common Pitfalls</h3>
-            <p className="text-slate-400 text-sm prose">{guidance.founder_wisdom_pitfalls}</p>
-          </div>
-        )}
+
+         <div>
+            <h3 className="mb-3 text-sm font-semibold text-text-DEFAULT">Tools & Resources</h3>
+             <div className="space-y-2">
+                <button className="flex w-full items-center gap-2 rounded-md border border-border bg-panel p-2 text-left text-sm font-medium text-text-DEFAULT transition-colors hover:bg-gray-50">
+                    <DocumentTextIcon className="h-5 w-5 text-primary-DEFAULT" />
+                    Open Interview Template
+                </button>
+                 <button className="flex w-full items-center gap-2 rounded-md border border-border bg-panel p-2 text-left text-sm font-medium text-text-DEFAULT transition-colors hover:bg-gray-50">
+                    <LinkIcon className="h-5 w-5 text-primary-DEFAULT" />
+                    Read: Interview Best Practices
+                </button>
+            </div>
+        </div>
       </div>
     </div>
   );

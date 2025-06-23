@@ -1,33 +1,20 @@
+// components/journey/KanbanColumn.tsx
 'use client';
 
-import { SortableContext, useSortable } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext } from '@dnd-kit/sortable';
 import type { TaskWithStatus } from '@/lib/types';
-import KanbanTaskCard from './KanbanTaskCard';
+import { KanbanTaskCard } from './KanbanTaskCard';
 import { useMemo } from 'react';
 
-type KanbanColumnProps = {
-  id: string;
-  title: string;
-  tasks: TaskWithStatus[];
-};
-
-export default function KanbanColumn({ id, title, tasks }: KanbanColumnProps) {
-  const { setNodeRef } = useSortable({
-    id: id,
-    data: {
-      type: 'Column',
-    },
-  });
-
+export function KanbanColumn({ id, title, tasks }: { id: string; title: string; tasks: TaskWithStatus[] }) {
+  const { setNodeRef } = useDroppable({ id });
   const taskIds = useMemo(() => tasks.map(t => t.id), [tasks]);
 
   return (
-    <div
-      ref={setNodeRef}
-      className="flex flex-col w-full min-w-[300px] max-w-[320px] bg-slate-800/50 rounded-lg p-3 gap-4"
-    >
-      <h3 className="font-bold text-slate-300 px-1">{title}</h3>
-      <div className="flex flex-col gap-3 flex-grow">
+    <div className="flex w-80 flex-shrink-0 flex-col gap-4">
+      <h3 className="font-semibold text-text-DEFAULT px-1">{title}</h3>
+      <div ref={setNodeRef} className="flex flex-col gap-4 flex-grow rounded-md bg-transparent p-1">
         <SortableContext items={taskIds}>
           {tasks.map(task => (
             <KanbanTaskCard key={task.id} task={task} />

@@ -1,58 +1,90 @@
+// components/journey/JourneySidebar.tsx
 'use client';
 
-import type { JourneyData, StageWithDetails, StepWithDetails } from '@/lib/types';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import type { JourneyData, StepWithDetails } from '@/lib/types';
+import { CheckCircleIcon, RadioIcon as InProgressIcon } from '@heroicons/react/24/solid';
+import { CircleIcon } from '@/components/icons';
 
-type JourneySidebarProps = {
-  journeyData: JourneyData;
-  selectedStepId: string | null;
-  onStepSelect: (stepId: string) => void;
+const ProgressCircle = ({ percentage }: { percentage: number }) => {
+    const strokeWidth = 2.5;
+    const radius = 12;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    return (
+        <svg className="h-7 w-7 -rotate-90">
+            <circle className="text-border" strokeWidth={strokeWidth} stroke="currentColor" fill="transparent" r={radius} cx="14" cy="14" />
+            <circle
+                className="text-primary"
+                strokeWidth={strokeWidth}
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                stroke="currentColor"
+                fill="transparent"
+                r={radius}
+                cx="14"
+                cy="14"
+            />
+        </svg>
+    );
 };
 
-// Internal component for a single selectable step
-const StepItem = ({ step, isSelected, onStepSelect }: { step: StepWithDetails, isSelected: boolean, onStepSelect: (stepId: string) => void}) => {
-  const selectedClasses = isSelected ? 'bg-primary/20 border-l-primary' : 'border-l-transparent hover:bg-slate-800/50';
-  const completedClasses = step.status === 'completed' ? 'text-slate-500' : 'text-slate-200';
+const StepItem = ({ step, isSelected, isActive, onStepSelect }: { step: StepWithDetails; isSelected: boolean; isActive: boolean; onStepSelect: (id: string) => void }) => {
+  const isCompleted = step.status === 'completed';
+  const getIcon = () => {
+    if (isCompleted) return <CheckCircleIcon className="h-6 w-6 text-success" />;
+    if (isActive) return <InProgressIcon className="h-6 w-6 text-primary" />;
+    return <CircleIcon className="h-6 w-6 text-border" />;
+  };
 
   return (
     <div
       onClick={() => onStepSelect(step.id)}
-      className={`flex items-center gap-3 p-2 pl-4 cursor-pointer border-l-2 transition-all duration-150 ${selectedClasses}`}
+      className={`flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors ${isSelected ? 'bg-primary-light' : 'hover:bg-gray-100'}`}
     >
-      {step.status === 'completed' ? (
-        <CheckCircleIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
-      ) : (
-        // Placeholder for a different icon if needed
-        <div className="h-5 w-5 border-2 border-slate-600 rounded-full flex-shrink-0"></div>
-      )}
-      <span className={`text-sm font-medium ${completedClasses}`}>{step.title}</span>
+      <div className="flex-shrink-0">{getIcon()}</div>
+      <div>
+        <h4 className={`font-semibold ${isSelected ? 'text-primary-DEFAULT' : 'text-text-DEFAULT'}`}>{step.title}</h4>
+      </div>
     </div>
   );
 };
 
-
-export default function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: JourneySidebarProps) {
+export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { journeyData: any; selectedStepId: string | null; onStepSelect: (id: string) => void; }) {
+  const getStageProgress = (stage: any) => {
+    if (!stage.steps || stage.steps.length === 0) return 0;
+    const completedSteps = stage.steps.filter((s: any) => s.status === 'completed').length;
+    return (completedSteps / stage.steps.length) * 100;
+  };
+  
   return (
-    <div className="flex flex-col h-full">
-       <h2 className="text-xl font-bold text-white mb-2 px-2">SaaS Founder Blueprint</h2>
-       <p className="text-sm text-slate-400 mb-6 px-2">{journeyData.description}</p>
-       <div className="flex-grow overflow-y-auto space-y-4">
-        {journeyData.stages.map((stage: StageWithDetails) => (
-          <div key={stage.id}>
-            <h3 className="text-xs font-bold uppercase text-slate-500 px-2 mb-2">{stage.title}</h3>
+    <div className="flex h-full flex-col border-r border-border bg-sidebar p-4">
+      <div className="px-2 pb-4">
+        <p className="text-sm font-medium text-text-light">SaaS Blueprint</p>
+      </div>
+      <div className="flex-grow space-y-6 overflow-y-auto">
+        {journeyData.stages.map((stage: any, index: number) => (
+          <div key={stage.id} className="relative pl-9">
+            {index < journeyData.stages.length - 1 && <div className="absolute left-[13px] top-[28px] h-full w-px bg-border" />}
+            <div className="absolute left-0 top-0">
+              <ProgressCircle percentage={getStageProgress(stage)} />
+            </div>
+            <h3 className="mb-2 font-bold text-text-DEFAULT">{stage.title}</h3>
             <div className="space-y-1">
               {stage.steps.map((step: StepWithDetails) => (
-                <StepItem 
+                <StepItem
                   key={step.id}
                   step={step}
                   isSelected={selectedStepId === step.id}
+                  isActive={selectedStepId === step.id}
                   onStepSelect={onStepSelect}
                 />
               ))}
             </div>
           </div>
         ))}
-       </div>
+      </div>
     </div>
   );
 }

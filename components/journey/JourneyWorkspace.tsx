@@ -1,22 +1,15 @@
+// components/journey/JourneyWorkspace.tsx
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { JourneyData, StepWithDetails } from '@/lib/types';
-import JourneySidebar from './JourneySidebar';
-import KanbanBoard from './KanbanBoard';
-import GuidanceColumn from './GuidanceColumn';
+import type { JourneyWorkspaceData, StepWithDetails } from '@/lib/types';
+import { JourneySidebar } from './JourneySidebar';
+import { KanbanBoard } from './KanbanBoard';
+import { GuidanceColumn } from './GuidanceColumn';
 
-
-type JourneyWorkspaceProps = {
-  journeyData: JourneyData;
-};
-
-export default function JourneyWorkspace({ journeyData }: JourneyWorkspaceProps) {
+export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspaceData }) {
   const [selectedStepId, setSelectedStepId] = useState<string | null>(() => {
-    if (journeyData.stages?.[0]?.steps?.[0]) {
-      return journeyData.stages[0].steps[0].id;
-    }
-    return null;
+    return journeyData.stages?.[0]?.steps?.[0]?.id || null;
   });
 
   const selectedStep = useMemo(() => {
@@ -28,35 +21,33 @@ export default function JourneyWorkspace({ journeyData }: JourneyWorkspaceProps)
     return null;
   }, [selectedStepId, journeyData.stages]);
 
-
   return (
-    <div className="flex w-full h-[calc(100vh-120px)] max-w-screen-2xl mx-auto gap-4 p-4">
-      {/* ===== Left Column: Navigation Sidebar ===== */}
-      <div className="w-[22rem] flex-shrink-0 bg-slate-900/70 rounded-lg shadow-md overflow-hidden">
+    <div className="flex h-full w-full max-w-screen-2xl mx-auto">
+      <div className="w-[22rem] flex-shrink-0">
         <JourneySidebar
           journeyData={journeyData}
           selectedStepId={selectedStepId}
           onStepSelect={setSelectedStepId}
         />
       </div>
-
-      {/* ===== Center Column: Kanban Workspace ===== */}
-      <div className="flex-grow rounded-lg min-w-0">
+      <div className="flex-grow min-w-0">
         {selectedStep ? (
           <KanbanBoard
-            key={selectedStep.id} // Re-mount board when step changes
+            key={selectedStep.id}
             tasks={selectedStep.tasks}
-            userJourneyId={journeyData.id} // This needs fixing - journey ID is on user_journeys not templates
+            userJourneyId={journeyData.userJourneyId}
             stepId={selectedStep.id}
+            stepTitle={selectedStep.title}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-slate-400">Select a step to begin.</div>
+          <div className="flex h-full items-center justify-center text-text-light">Select a step to begin.</div>
         )}
       </div>
-
-      {/* ===== Right Column: Guidance Panel ===== */}
-      <div className="w-[24rem] flex-shrink-0 bg-slate-900/70 rounded-lg shadow-md overflow-hidden">
-        <GuidanceColumn guidance={selectedStep?.guidance_content || null} />
+      <div className="w-[24rem] flex-shrink-0">
+        <GuidanceColumn
+          guidance={selectedStep?.guidance_content || null}
+          stepTitle={selectedStep?.title || 'Guidance'}
+        />
       </div>
     </div>
   );

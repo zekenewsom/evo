@@ -1,12 +1,8 @@
-// app/journey/[journeyId]/page.tsx (Refactored)
+// app/journey/[journeyId]/page.tsx
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getJourneyForUser } from '@/lib/data';
-// ADDITION: Import the new workspace component
-import JourneyWorkspace from '@/components/journey/JourneyWorkspace';
-import UserJourney from '@/components/journey/UserJourney';
-
-// Server component fetches data and passes to client component
+import { JourneyWorkspace } from '@/components/journey/JourneyWorkspace';
 
 type JourneyPageProps = {
   params: {
@@ -15,8 +11,10 @@ type JourneyPageProps = {
 };
 
 export default async function UserJourneyPage({ params }: JourneyPageProps) {
-  const { journeyId } = await params;
   const supabase = await createSupabaseServerClient();
+  
+  const journeyId = params.journeyId;
+  
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -27,13 +25,17 @@ export default async function UserJourneyPage({ params }: JourneyPageProps) {
 
   if (!journeyData) {
     return (
-      <div className="text-center p-8">
+      <div className="p-8 text-center">
         <h1 className="text-2xl font-bold">Journey Not Found</h1>
         <p>This journey could not be loaded or you do not have access.</p>
       </div>
     );
   }
 
-  // MODIFICATION: Render the new JourneyWorkspace component instead of the old one.
-  return <JourneyWorkspace journeyData={journeyData} />;
+  const workspaceData = {
+    ...journeyData,
+    userJourneyId: journeyId
+  };
+
+  return <JourneyWorkspace journeyData={workspaceData} />;
 }
