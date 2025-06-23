@@ -31,7 +31,7 @@ export default async function JourneyLayout({ children, params }: JourneyLayoutP
   return (
     <div className="flex h-screen flex-col">
         <header className="w-full border-b border-border bg-sidebar flex-shrink-0">
-          <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-6">
+          <div className="flex h-16 items-center justify-between px-6">
             <Link href="/" className="text-xl font-bold text-primary">
               Evo Journey Navigator
             </Link>

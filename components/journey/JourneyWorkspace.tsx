@@ -1,12 +1,52 @@
 // components/journey/JourneyWorkspace.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import type { JourneyWorkspaceData, StepWithDetails } from '@/lib/types';
 import { JourneySidebar } from './JourneySidebar';
 import { KanbanBoard } from './KanbanBoard';
 import { GuidanceColumn } from './GuidanceColumn';
 import { Bars3Icon } from '@heroicons/react/24/solid';
+
+const ResizableDivider = ({ onDrag, position }: { onDrag: (deltaX: number) => void; position: 'left' | 'right' }) => {
+  const isDragging = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging.current) return;
+    const deltaX = position === 'left' ? e.movementX : -e.movementX;
+    onDrag(deltaX);
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    document.body.style.cursor = 'default';
+    document.body.style.userSelect = 'auto';
+  };
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [position]);
+
+  return (
+    <div
+      className="w-6 bg-transparent hover:bg-slate-100/30 transition-colors cursor-col-resize z-20"
+      onMouseDown={handleMouseDown}
+      role="separator"
+      aria-orientation="vertical"
+    />
+  );
+};
 
 export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspaceData }) {
   const [selectedStepId, setSelectedStepId] = useState<string | null>(() => {
@@ -14,6 +54,8 @@ export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspac
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [guidanceCollapsed, setGuidanceCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(352); // 22rem = 352px
+  const [guidanceWidth, setGuidanceWidth] = useState(384); // 24rem = 384px
 
   const selectedStep = useMemo(() => {
     if (!selectedStepId) return null;
@@ -24,17 +66,27 @@ export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspac
     return null;
   }, [selectedStepId, journeyData.stages]);
 
+  const handleSidebarResize = (deltaX: number) => {
+    const newWidth = Math.max(100, Math.min(1200, sidebarWidth + deltaX));
+    setSidebarWidth(newWidth);
+  };
+
+  const handleGuidanceResize = (deltaX: number) => {
+    const newWidth = Math.max(100, Math.min(1200, guidanceWidth + deltaX));
+    setGuidanceWidth(newWidth);
+  };
+
   return (
-    <div className="flex h-full w-full max-w-screen-2xl mx-auto">
+    <div className="flex h-full w-full">
       {/* Collapsible Sidebar */}
-      <div className={`relative transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-[22rem]'} flex-shrink-0`}>
+      <div className={`relative transition-all duration-300 ${sidebarCollapsed ? 'w-10' : ''} flex-shrink-0`} style={{ width: sidebarCollapsed ? '40px' : `${sidebarWidth}px` }}>
         <div className={`h-full ${sidebarCollapsed ? 'bg-white border-r border-slate-200' : ''}`}>
           <button
-            className="absolute top-4 right-4 z-10 bg-white border border-slate-300 rounded-full p-2 shadow-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
+            className="absolute top-2 right-2 z-10 bg-white border border-slate-300 rounded-md p-1.5 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
             onClick={() => setSidebarCollapsed((c) => !c)}
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            <Bars3Icon className="h-6 w-6 text-slate-700" />
+            <Bars3Icon className="h-4 w-4 text-slate-600" />
           </button>
           {!sidebarCollapsed && (
             <JourneySidebar
@@ -45,6 +97,12 @@ export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspac
           )}
         </div>
       </div>
+      
+      {/* Resizable divider for sidebar */}
+      {!sidebarCollapsed && (
+        <ResizableDivider onDrag={handleSidebarResize} position="left" />
+      )}
+      
       <div className="flex-grow min-w-0">
         {selectedStep ? (
           <KanbanBoard
@@ -58,14 +116,20 @@ export function JourneyWorkspace({ journeyData }: { journeyData: JourneyWorkspac
           <div className="flex h-full items-center justify-center text-text-light">Select a step to begin.</div>
         )}
       </div>
-      <div className={`relative transition-all duration-300 ${guidanceCollapsed ? 'w-16' : 'w-[24rem]'} flex-shrink-0`}>
+      
+      {/* Resizable divider for guidance */}
+      {!guidanceCollapsed && (
+        <ResizableDivider onDrag={handleGuidanceResize} position="right" />
+      )}
+      
+      <div className={`relative transition-all duration-300 ${guidanceCollapsed ? 'w-10' : ''} flex-shrink-0`} style={{ width: guidanceCollapsed ? '40px' : `${guidanceWidth}px` }}>
         <div className={`h-full ${guidanceCollapsed ? 'bg-white border-l border-slate-200' : ''}`}>
           <button
-            className="absolute top-4 right-4 z-10 bg-white border border-slate-300 rounded-full p-2 shadow-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
+            className="absolute top-2 right-2 z-10 bg-white border border-slate-300 rounded-md p-1.5 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
             onClick={() => setGuidanceCollapsed((c) => !c)}
             aria-label={guidanceCollapsed ? 'Expand guidance' : 'Collapse guidance'}
           >
-            <Bars3Icon className="h-6 w-6 text-slate-700" />
+            <Bars3Icon className="h-4 w-4 text-slate-600" />
           </button>
           {!guidanceCollapsed && (
             <GuidanceColumn

@@ -1,8 +1,9 @@
 // components/journey/JourneySidebar.tsx
 'use client';
 
+import { useState } from 'react';
 import type { StepWithDetails, StageWithDetails, JourneyWorkspaceData } from '@/lib/types';
-import { CheckCircleIcon, RadioIcon as InProgressIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, RadioIcon as InProgressIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { CircleIcon } from '@/components/icons';
 
 const ProgressCircle = ({ percentage }: { percentage: number }) => {
@@ -83,13 +84,27 @@ const StepItem = ({ step, isSelected, isActive, onStepSelect }: { step: StepWith
     >
       <div className="flex-shrink-0">{getIcon()}</div>
       <div>
-        <h4 className={`font-semibold ${isSelected ? 'text-primary' : 'text-text'}`}>{step.title}</h4>
+        <h4 className={`${isSelected ? 'text-primary' : 'text-text'}`}>{step.title}</h4>
       </div>
     </div>
   );
 };
 
 export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { journeyData: JourneyWorkspaceData; selectedStepId: string | null; onStepSelect: (id: string) => void; }) {
+  const [collapsedStages, setCollapsedStages] = useState<Set<string>>(new Set());
+
+  const toggleStage = (stageId: string) => {
+    setCollapsedStages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(stageId)) {
+        newSet.delete(stageId);
+      } else {
+        newSet.add(stageId);
+      }
+      return newSet;
+    });
+  };
+
   const getStageProgress = (stage: StageWithDetails) => {
     if (!stage.steps || stage.steps.length === 0) return 0;
     
@@ -112,22 +127,37 @@ export function JourneySidebar({ journeyData, selectedStepId, onStepSelect }: { 
       <div className="px-2 pb-4">
         <p className="text-sm font-medium text-text-light">SaaS Blueprint</p>
       </div>
-      <div className="flex-grow space-y-6 overflow-y-auto">
+      <div className="flex-grow space-y-4 overflow-y-auto">
         {journeyData.stages.map((stage: StageWithDetails, index: number) => {
           const stageProgress = getStageProgress(stage);
           const isStageCompleted = stageProgress === 100;
+          const isCollapsed = collapsedStages.has(stage.id);
           
           return (
-            <div key={stage.id} className="relative pl-9">
-              <div className="absolute left-0 top-0">
-                {isStageCompleted ? (
-                  <CheckCircleIcon className="h-7 w-7 text-success" />
-                ) : (
-                  <ProgressCircle percentage={stageProgress} />
-                )}
+            <div key={stage.id} className="relative">
+              <div className="flex items-center justify-between pl-9 mb-2">
+                <div className="absolute left-0 top-0">
+                  {isStageCompleted ? (
+                    <CheckCircleIcon className="h-7 w-7 text-success" />
+                  ) : (
+                    <ProgressCircle percentage={stageProgress} />
+                  )}
+                </div>
+                <h3 className="font-bold text-text text-left">{stage.title}</h3>
+                <button
+                  onClick={() => toggleStage(stage.id)}
+                  className="flex items-center hover:bg-gray-100 rounded-md p-1 transition-colors"
+                >
+                  {isCollapsed ? (
+                    <ChevronRightIcon className="h-4 w-4 text-text-light" />
+                  ) : (
+                    <ChevronDownIcon className="h-4 w-4 text-text-light" />
+                  )}
+                </button>
               </div>
-              <h3 className="mb-2 font-bold text-text">{stage.title}</h3>
-              <div className="space-y-1">
+              <div className={`space-y-1 transition-all duration-300 ease-in-out overflow-hidden ${
+                isCollapsed ? 'max-h-0 opacity-0' : 'max-h-96 opacity-100'
+              }`}>
                 {stage.steps.map((step: StepWithDetails) => (
                   <StepItem
                     key={step.id}
