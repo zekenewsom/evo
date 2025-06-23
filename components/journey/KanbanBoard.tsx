@@ -8,6 +8,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, u
 import { KanbanTaskCard } from './KanbanTaskCard';
 import { updateTaskStatus } from '@/actions/journey';
 import { Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/solid';
+import TaskItem from './TaskItem';
 
 type KanbanBoardProps = {
   tasks: TaskWithStatus[];
@@ -21,8 +22,9 @@ type TaskStatus = 'todo' | 'inprogress' | 'done';
 export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTitle }: KanbanBoardProps) {
   const [tasks, setTasks] = useState(initialTasks);
   const [activeTask, setActiveTask] = useState<TaskWithStatus | null>(null);
+  const [view, setView] = useState<'kanban' | 'list'>('list');
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-  const [view, setView] = useState<'kanban' | 'list'>('kanban');
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -90,31 +92,76 @@ export function KanbanBoard({ tasks: initialTasks, userJourneyId, stepId, stepTi
           <p className="text-text-medium">Conduct structured interviews with potential customers to validate your assumptions and gather insights about their pain points and needs.</p>
         </div>
         <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
-          <button onClick={() => setView('list')} className={`rounded-md p-1.5 transition-colors ${view === 'list' ? 'bg-white text-primary shadow-sm' : 'text-text-light hover:text-text'}`}>
+          <button onClick={() => setView('list')} className={`rounded-md p-1.5 transition-colors flex items-center gap-2 ${view === 'list' ? 'bg-white text-primary shadow-sm' : 'text-text-light hover:text-text'}`}>
             <Bars3Icon className="h-5 w-5"/>
           </button>
-           <button onClick={() => setView('kanban')} className={`rounded-md p-1.5 transition-colors ${view === 'kanban' ? 'bg-white text-primary shadow-sm' : 'text-text-light hover:text-text'}`}>
+          <button onClick={() => setView('kanban')} className={`rounded-md p-1.5 transition-colors flex items-center gap-2 ${view === 'kanban' ? 'bg-white text-primary shadow-sm' : 'text-text-light hover:text-text'}`}>
             <Squares2X2Icon className="h-5 w-5"/>
           </button>
-         </div>
+        </div>
       </div>
       <div className="mb-2 h-1 w-full rounded-full bg-border">
-          <div className="h-1 rounded-full bg-primary" style={{ width: `${progressPercentage}%` }} />
+        <div className="h-1 rounded-full bg-primary" style={{ width: `${progressPercentage}%` }} />
       </div>
       <p className="mb-4 text-sm text-text-medium">{completedTasks} of {totalTasks} tasks complete</p>
-      <div className="flex flex-grow gap-5 overflow-x-auto">
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCorners}>
+      {view === 'list' ? (
+        <div className="w-full max-w-2xl mx-auto space-y-3">
+          {tasks.map((task, idx) => {
+            const isSelected = selectedTaskId === task.id;
+            const isInProgress = idx === 1; // Second task is in progress (badge)
+            const isCompleted = task.status === 'done';
+            return (
+              <div
+                key={task.id}
+                className={`flex items-center justify-between px-5 py-4 rounded-xl border transition-all shadow-sm bg-white ${isSelected ? 'border-primary/70 bg-primary/5' : 'border-slate-200'} ${isCompleted ? 'opacity-70' : ''}`}
+                onClick={() => setSelectedTaskId(task.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      const newStatus = isCompleted ? 'todo' : 'done';
+                      updateTaskStatus(userJourneyId, stepId, task.id, newStatus);
+                    }}
+                    className={`w-5 h-5 flex items-center justify-center rounded border-2 ${isCompleted ? 'border-primary bg-primary' : 'border-slate-300 bg-white'} transition-colors`}
+                    aria-label={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
+                  >
+                    {isCompleted && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    )}
+                  </button>
+                  <div>
+                    <div className={`font-medium text-base text-slate-900`}>{task.title}</div>
+                    {isSelected && (
+                      <div className="text-xs text-slate-500">
+                        Create structured questions focusing on pain points and workflows
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {isInProgress && (
+                  <span className="ml-4 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold">In Progress</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-grow gap-5 overflow-x-auto">
+          <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCorners}>
             {columns.map(col => (
-             <KanbanColumn
+              <KanbanColumn
                 key={col.id}
                 id={col.id}
                 title={`${col.title} (${tasksByStatus[col.id as TaskStatus]?.length || 0})`}
                 tasks={tasksByStatus[col.id as TaskStatus] || []}
               />
             ))}
-          <DragOverlay>{activeTask && <KanbanTaskCard task={activeTask} />}</DragOverlay>
-        </DndContext>
-      </div>
+            <DragOverlay>{activeTask && <KanbanTaskCard task={activeTask} />}</DragOverlay>
+          </DndContext>
+        </div>
+      )}
     </div>
   );
 }
