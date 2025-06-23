@@ -29,7 +29,7 @@ export default async function DashboardPage() {
         <div className="bg-slate-600 p-8 rounded-lg">
           <h2 className="text-2xl font-bold text-slate-100">You&apos;re on your way!</h2>
           <p className="text-slate-300 mt-2 mb-6">You have an active journey in progress. Keep up the momentum!</p>
-          <Link href={`/journey/${activeJourney.id}`} className="btn btn-primary btn-lg">
+          <Link href={`/journey/${activeJourney.id}`} className="btn btn-primary btn-lg text-white px-8 py-3 rounded-full shadow-lg border-2 border-white transition-all duration-200 hover:bg-primary/90 hover:border-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
             Continue Your Journey
           </Link>
         </div>

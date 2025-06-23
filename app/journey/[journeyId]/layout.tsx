@@ -48,9 +48,7 @@ export default async function JourneyLayout({ children, params }: JourneyLayoutP
             </Link>
             <div className="flex items-center gap-4">
               {journeyData && (
-                <span className="text-sm font-medium text-text-medium">
-                  Stage {currentStageIndex + 1} of {totalStages}
-                </span>
+                null
               )}
               <div className="h-5 w-px bg-border"></div>
               <button className="text-text-light transition-colors hover:text-text">
