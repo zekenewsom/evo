@@ -8,27 +8,29 @@ export function createSupabaseServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
+        async get(name: string) {
           // Get a fresh instance of the cookie store on every read
-          const cookieStore = cookies();
+          const cookieStore = await cookies();
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
+        async set(name: string, value: string, options: CookieOptions) {
           try {
             // Get a fresh instance of the cookie store on every write
-            const cookieStore = cookies();
+            const cookieStore = await cookies();
             cookieStore.set({ name, value, ...options });
-          } catch (error) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_error) {
             // The `set` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing sessions.
           }
         },
-        remove(name: string, options: CookieOptions) {
+        async remove(name: string, options: CookieOptions) {
           try {
             // Get a fresh instance of the cookie store on every delete
-            const cookieStore = cookies();
+            const cookieStore = await cookies();
             cookieStore.set({ name, value: '', ...options });
-          } catch (error) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_error) {
             // The `delete` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing sessions.
           }

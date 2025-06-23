@@ -38,7 +38,7 @@ export const getJourneyForUser = cache(
         return null;
     }
 
-    const journey = userJourneyData.journey_templates as JourneyData; 
+    const journey = userJourneyData.journey_templates as unknown as JourneyData; 
 
     const { data: progressData, error: progressError } = await supabase
         .from('user_progress')
@@ -66,7 +66,7 @@ export const getJourneyForUser = cache(
             step.tasks.sort((a: TaskWithStatus, b: TaskWithStatus) => a.order_in_step - b.order_in_step);
         });
         // Add completion percentage to the stage object
-        (stage as any).completionPercentage = stage.steps.length > 0 ? (completedSteps / stage.steps.length) * 100 : 0;
+        stage.completionPercentage = stage.steps.length > 0 ? (completedSteps / stage.steps.length) * 100 : 0;
         stage.steps.sort((a: StepWithDetails, b: StepWithDetails) => a.order_in_stage - b.order_in_stage);
     });
     journey.stages.sort((a: StageWithDetails, b: StageWithDetails) => a.order_in_journey - b.order_in_journey);
@@ -118,7 +118,7 @@ export const getStepDetailsForUser = cache(
     // This is where the error was. The type for the nested relation needs to be explicit.
     const nestedRelation = stepData.stages as { title: string; journey_templates: { title: string } } | null;
 
-    const finalStepData = {
+    const finalStepData: StepDetailsForWorkspace = {
       ...(stepData as StepWithDetails),
       tasks: tasksWithStatus.sort((a: TaskWithStatus,b: TaskWithStatus) => a.order_in_step - b.order_in_step),
       guidance_content: Array.isArray(stepData.guidance_content) ? stepData.guidance_content[0] || null : stepData.guidance_content,
@@ -126,8 +126,7 @@ export const getStepDetailsForUser = cache(
       stageTitle: nestedRelation?.title || 'Stage',
       journeyTitle: nestedRelation?.journey_templates?.title || 'Journey',
     };
-    delete (finalStepData as any).stages;
 
-    return finalStepData as StepDetailsForWorkspace;
+    return finalStepData;
   }
 );

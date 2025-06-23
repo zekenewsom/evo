@@ -4,7 +4,7 @@
 import { useState, useMemo, useTransition } from 'react';
 import type { TaskWithStatus } from '@/lib/types';
 import { KanbanColumn } from './KanbanColumn';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, Active, Over } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { KanbanTaskCard } from './KanbanTaskCard';
 import { updateTaskStatus } from '@/actions/journey';
 import { Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/solid';
