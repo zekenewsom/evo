@@ -34,13 +34,10 @@ export async function startSaaSJourney() {
 
   const progressItems: any[] = [];
   (blueprint.stages as StageWithDetails[]).forEach((stage: StageWithDetails) => {
-    // A stage is either not started or completed.
     progressItems.push({ user_journey_id: userJourney.id, item_id: stage.id, item_type: 'stage', status: 'not_started' });
     (stage.steps as StepWithDetails[]).forEach((step: StepWithDetails) => {
-      // A step is either not started or completed.
       progressItems.push({ user_journey_id: userJourney.id, item_id: step.id, item_type: 'step', status: 'not_started' });
       (step.tasks as TaskWithStatus[]).forEach((task: TaskWithStatus) => {
-        // A task follows the todo -> inprogress -> done flow.
         progressItems.push({
           user_journey_id: userJourney.id,
           item_id: task.id,
@@ -62,15 +59,38 @@ export async function startSaaSJourney() {
   redirect(`/journey/${userJourney.id}`);
 }
 
+export async function saveUserInput(formData: FormData) {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { return { error: 'You must be logged in.' }; }
+
+  const journeyId = formData.get('journeyId') as string;
+  const stepId = formData.get('stepId') as string;
+  const inputContent = formData.get('inputContent') as string;
+
+  if (!journeyId || !stepId) { return { error: 'Missing required IDs.' }; }
+
+  const { error } = await supabase
+    .from('user_inputs')
+    .upsert({ user_journey_id: journeyId, step_id: stepId, input_content: inputContent }, { onConflict: 'user_journey_id,step_id' });
+  
+  if (error) { 
+    console.error('Error saving input:', error); 
+    return { error: 'Failed to save notes.' };
+  }
+  
+  revalidatePath(`/journey/${journeyId}/${stepId}`);
+  return { success: true, message: 'Saved!' };
+}
+
 async function updateParentStatuses(supabase: any, userJourneyId: string, stepId: string) {
-  // First, check if all tasks for the current step are now 'done'
-  const { data: stepDetails, error: stepDetailsError } = await supabase
+  const { data: stepDetails, error: tasksError } = await supabase
     .from('steps')
     .select('id, stage_id, tasks(id)')
     .eq('id', stepId)
     .single();
 
-  if (stepDetailsError || !stepDetails) return;
+  if (tasksError || !stepDetails) return;
 
   const taskIds = stepDetails.tasks.map((t: { id: string }) => t.id);
   const { data: taskProgress, error: taskProgressError } = await supabase
@@ -85,7 +105,6 @@ async function updateParentStatuses(supabase: any, userJourneyId: string, stepId
   const allTasksCompleted = taskProgress.every((p: { status: string }) => p.status === 'done');
 
   if (allTasksCompleted) {
-    // If all tasks are done, mark the step as 'completed'
     await supabase
       .from('user_progress')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
@@ -93,7 +112,6 @@ async function updateParentStatuses(supabase: any, userJourneyId: string, stepId
       .eq('item_id', stepId)
       .eq('item_type', 'step');
 
-    // Now, check if all steps in the parent stage are completed
     const stageId = stepDetails.stage_id;
     const { data: stageDetails, error: stageDetailsError } = await supabase
       .from('stages')
@@ -116,7 +134,6 @@ async function updateParentStatuses(supabase: any, userJourneyId: string, stepId
     const allStepsCompleted = stepProgress.every((p: { status: string }) => p.status === 'completed');
 
     if (allStepsCompleted) {
-      // If all steps are complete, mark the stage as 'completed'
       await supabase
         .from('user_progress')
         .update({ status: 'completed', completed_at: new Date().toISOString() })
@@ -143,10 +160,7 @@ export async function updateTaskStatus(userJourneyId: string, stepId: string, ta
     return { error: 'Could not update the task status.' };
   }
 
-  // After updating a task, check if its parent step/stage should be marked as complete.
   await updateParentStatuses(supabase, userJourneyId, stepId);
-
-  // Revalidate the entire journey path to update progress circles and stage indicators.
   revalidatePath(`/journey/${userJourneyId}`);
   
   return { success: true };

@@ -2,10 +2,11 @@
 'use client';
 
 import type { Tables } from '@/lib/database.types';
+import type { ResourceLink as ResourceLinkType, ResourceLinks } from '@/lib/types';
 import { XMarkIcon, LightBulbIcon, DocumentTextIcon, LinkIcon, BeakerIcon } from '@heroicons/react/24/outline';
 
 // A helper to render different resource link types
-const ResourceLink = ({ link }: { link: { type: string; url: string; text: string } }) => {
+const ResourceLink = ({ link }: { link: ResourceLinkType }) => {
   const Icon = link.type === 'template' ? DocumentTextIcon : LinkIcon;
   return (
     <a 
@@ -21,6 +22,9 @@ const ResourceLink = ({ link }: { link: { type: string; url: string; text: strin
 };
 
 export function GuidanceColumn({ guidance, stepTitle }: { guidance: Tables<'guidance_content'> | null; stepTitle: string; }) {
+  // Safely cast the JSON 'resource_links' to our new type
+  const resourceLinks = guidance?.resource_links as ResourceLinks | null;
+
   return (
     <div className="flex h-full flex-col border-l border-border bg-guidance">
       {/* Header */}
@@ -63,11 +67,11 @@ export function GuidanceColumn({ guidance, stepTitle }: { guidance: Tables<'guid
                     </div>
                 )}
 
-                {(guidance.resource_links as any)?.links && (guidance.resource_links as any).links.length > 0 && (
+                {resourceLinks?.links && resourceLinks.links.length > 0 && (
                     <div>
                         <h3 className="mb-3 text-sm font-semibold text-text">Tools & Resources</h3>
                          <div className="space-y-2">
-                            {(guidance.resource_links as any).links.map((link: any, i: number) => <ResourceLink key={i} link={link} />)}
+                            {resourceLinks.links.map((link, i) => <ResourceLink key={i} link={link} />)}
                         </div>
                     </div>
                 )}

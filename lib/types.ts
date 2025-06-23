@@ -27,3 +27,13 @@ export type JourneyWorkspaceData = Tables<'journey_templates'> & {
 export type JourneyData = Tables<'journey_templates'> & {
   stages: StageWithDetails[];
 };
+
+export type ResourceLink = {
+  type: 'template' | 'article' | 'video' | string;
+  url: string;
+  text: string;
+};
+
+export type ResourceLinks = {
+  links: ResourceLink[];
+};
