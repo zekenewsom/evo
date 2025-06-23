@@ -176,6 +176,7 @@ export async function updateTaskStatus(userJourneyId: string, stepId: string, ta
 
   await updateParentStatuses(supabase, userJourneyId, stepId);
   revalidatePath(`/journey/${userJourneyId}`);
+  revalidatePath(`/journey/${userJourneyId}/${stepId}`);
   
   return { success: true };
 }

@@ -28,12 +28,6 @@ export default async function JourneyLayout({ children, params }: JourneyLayoutP
 
   const journeyData = await getJourneyForUser(supabase, journeyId, user.id);
   
-  let totalStages = 0;
-
-  if (journeyData) {
-    totalStages = journeyData.stages.length;
-  }
-  
   return (
     <div className="flex h-screen flex-col">
         <header className="w-full border-b border-border bg-sidebar flex-shrink-0">
