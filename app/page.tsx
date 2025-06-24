@@ -36,7 +36,7 @@ export default async function HomePage() {
           Evo provides the guided journey, intelligent tools, and expert support you
           need to build and launch your SaaS venture successfully.
         </p>
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 mb-8">
           <Link
             href="/signup"
             className="btn btn-primary btn-lg text-white px-8 py-3 rounded-full shadow-lg border-2 border-white transition-all duration-200 hover:bg-primary/90 hover:border-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
@@ -45,9 +45,9 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="mt-16 w-full p-8 bg-slate-700/50 rounded-lg border border-slate-600">
-          <h2 className="text-2xl font-bold mb-4 text-white">Your Founder&apos;s Operating System</h2>
-          <p className="text-slate-400">
+        <div className="w-full p-6 bg-slate-700/50 rounded-lg border border-slate-600">
+          <h2 className="text-xl font-bold mb-3 text-white">Your Founder&apos;s Operating System</h2>
+          <p className="text-slate-400 text-sm">
             Stop guessing, start building. We provide the structured path so you can focus on what
             matters most.
           </p>
